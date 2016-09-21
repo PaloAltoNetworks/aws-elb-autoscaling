@@ -5,7 +5,7 @@ This CloudFormation Template deploys a tier of VM-Series firewalls on AWS that i
 **Requirements**
  
 - You can deploy this solution only in regions that support AWS Lambda.
-- Accept the EULA for the [VM-Series firewall Bundle 2] (https://aws.amazon.com/marketplace/pp/B00PJ2V04O)
+- You must accept the EULA for the [VM-Series firewall Bundle 2] (https://aws.amazon.com/marketplace/pp/B00PJ2V04O) prior to launching the template.
  
 **Support Policy**
  
