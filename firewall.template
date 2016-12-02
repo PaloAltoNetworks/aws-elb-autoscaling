@@ -141,22 +141,21 @@
     "PanS3BucketTpl": {
       "Type" : "String",
       "Description": "VM-Series firewall Lambda/Scripts/CFT template S3 Bucket or your own in the same region",
-      "MinLength" : "3",
-      "MaxLength" : "63"
+      "Default": "panw-aws"
     }
   },
   "Mappings": {
     "RegionMapPANW" : {
-      "us-west-2"     : { "AMI": "ami-e4be4b84" },
-      "us-west-1"     : { "AMI": "ami-12d0ad72" },
-      "us-east-1"     : { "AMI": "ami-29a8a243" },
-      "eu-west-1"     : { "AMI": "ami-5d92132e" },
-      "eu-central-1"  : { "AMI": "ami-8be001e4" },
-      "ap-northeast-1"  : { "AMI": "ami-b84b5ad6" },
-      "ap-northeast-2"  : { "AMI": "ami-fb08c195" },
-      "ap-southeast-1"  : { "AMI": "ami-946da7f7" },
-      "ap-southeast-2"  : { "AMI": "ami-d7c6e5b4" },
-      "sa-east-1"  : { "AMI": "ami-19810e75" },
+      "us-west-2"     : { "AMI": "ami-fd45eb9d" },
+      "us-west-1"     : { "AMI": "ami-22feaa42" },
+      "us-east-1"     : { "AMI": "ami-7793ac60" },
+      "eu-west-1"     : { "AMI": "ami-e894ca9b" },
+      "eu-central-1"  : { "AMI": "ami-68c20507" },
+      "ap-northeast-1"  : { "AMI": "ami-6446f705" },
+      "ap-northeast-2"  : { "AMI": "ami-f9f92e97" },
+      "ap-southeast-1"  : { "AMI": "ami-cbb31ea8" },
+      "ap-southeast-2"  : { "AMI": "ami-f7447d94" },
+      "sa-east-1"  : { "AMI": "ami-9a0c92f6" },
       "ap-south-1"     : { "AMI": "ami-xxxxxxx" }
     },
     "BucketRegionMap" : {
@@ -173,7 +172,7 @@
       "ap-south-1"     : { "Name": "panw-aws-ap-south-1" }
     },
     "VersionMap" : {
-      "Version"     : { "Key": "v1.0/panw-aws.zip" }
+      "Version"     : { "Key": "v1.1/panw-aws.zip" }
     },
     "KeyMap" : {
       "Key"     : { "Key": "panw-aws.zip" }
