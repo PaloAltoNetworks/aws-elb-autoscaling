@@ -625,21 +625,7 @@ Resources:
       AllocationId: !GetAtt [EIP2, AllocationId]
       SubnetId: !Ref 'NATGWSubnetAz2'
     DependsOn: [VPC, EIP2, NATGWSubnetAz2, GatewayToInternet]
-  NAT3:
-    Type: AWS::EC2::NatGateway
-    Condition: NATGatewayRequired3
-    Properties:
-      AllocationId: !GetAtt [EIP3, AllocationId]
-      SubnetId: !Ref 'NATGWSubnetAz3'
-    DependsOn: [VPC, EIP3, NATGWSubnetAz3, GatewayToInternet]
-  NAT4:
-    Type: AWS::EC2::NatGateway
-    Condition: NATGatewayRequired4
-    Properties:
-      AllocationId: !GetAtt [EIP4, AllocationId]
-      SubnetId: !Ref 'NATGWSubnetAz4'
-    DependsOn: [VPC, EIP4, NATGWSubnetAz4, GatewayToInternet]
-  MGMTSubnetAz1:
+ MGMTSubnetAz1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select ['0', !Ref 'VpcAzs']
@@ -668,38 +654,6 @@ Resources:
         Value: MGMT
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', MGMTSubnetAz2]]
-    DependsOn: [VPC]
-  MGMTSubnetAz3:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet3
-    Properties:
-      AvailabilityZone: !Select ['2', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['2', !Ref 'MgmtSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: MGMT
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', MGMTSubnetAz3]]
-    DependsOn: [VPC]
-  MGMTSubnetAz4:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet4
-    Properties:
-      AvailabilityZone: !Select ['3', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['3', !Ref 'MgmtSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: MGMT
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', MGMTSubnetAz4]]
     DependsOn: [VPC]
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -739,28 +693,6 @@ Resources:
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', NATGWRouteTableAz2]]
     DependsOn: [VPC]
-  NATGWRouteTableAz3:
-    Type: AWS::EC2::RouteTable
-    Condition: NATGatewayRequired3
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', NATGWRouteTableAz3]]
-    DependsOn: [VPC]
-  NATGWRouteTableAz4:
-    Type: AWS::EC2::RouteTable
-    Condition: NATGatewayRequired4
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', NATGWRouteTableAz4]]
-    DependsOn: [VPC]
   NATGWRoute1:
     Type: AWS::EC2::Route
     Condition: NATGatewayRequired
@@ -777,14 +709,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref 'InternetGateway'
     DependsOn: [NATGWRouteTableAz2, GatewayToInternet]
-  NATGWRoute3:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayRequired3
-    Properties:
-      RouteTableId: !Ref 'NATGWRouteTableAz3'
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref 'InternetGateway'
-    DependsOn: [NATGWRouteTableAz3, GatewayToInternet]
   MGMTRouteTableAz1:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -805,28 +729,6 @@ Resources:
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', MGMTRouteTableAz2]]
     DependsOn: [VPC]
-  MGMTRouteTableAz3:
-    Type: AWS::EC2::RouteTable
-    Condition: CreateSubnet3
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', MGMTRouteTableAz3]]
-    DependsOn: [VPC]
-  MGMTRouteTableAz4:
-    Type: AWS::EC2::RouteTable
-    Condition: CreateSubnet4
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', MGMTRouteTableAz4]]
-    DependsOn: [VPC]
   MGMTRoute1:
     Type: AWS::EC2::Route
     Condition: NATGatewayNotRequired
@@ -843,22 +745,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref 'InternetGateway'
     DependsOn: [MGMTRouteTableAz2]
-  MGMTRoute3:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayNotRequired3
-    Properties:
-      RouteTableId: !Ref 'MGMTRouteTableAz3'
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref 'InternetGateway'
-    DependsOn: [MGMTRouteTableAz3]
-  MGMTRoute4:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayNotRequired4
-    Properties:
-      RouteTableId: !Ref 'MGMTRouteTableAz4'
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref 'InternetGateway'
-    DependsOn: [MGMTRouteTableAz4]
   LambdaRoute1:
     Type: AWS::EC2::Route
     Condition: NATGatewayRequired
@@ -875,22 +761,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref 'NAT2'
     DependsOn: [NAT2]
-  LambdaRoute3:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayRequired3
-    Properties:
-      RouteTableId: !Ref 'LambdaRouteTableAz3'
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref 'NAT3'
-    DependsOn: [NAT3]
-  LambdaRoute4:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayRequired4
-    Properties:
-      RouteTableId: !Ref 'LambdaRouteTableAz4'
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref 'NAT4'
-    DependsOn: [NAT4]
   MGMTRouteNAT1:
     Type: AWS::EC2::Route
     Condition: NATGatewayRequired
@@ -907,22 +777,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref 'NAT2'
     DependsOn: [NAT2]
-  MGMTRouteNAT3:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayRequired3
-    Properties:
-      RouteTableId: !Ref 'MGMTRouteTableAz3'
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref 'NAT3'
-    DependsOn: [NAT3]
-  MGMTRouteNAT4:
-    Type: AWS::EC2::Route
-    Condition: NATGatewayRequired4
-    Properties:
-      RouteTableId: !Ref 'MGMTRouteTableAz4'
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref 'NAT4'
-    DependsOn: [NAT4]
   LambdaSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: NATGatewayRequired
@@ -937,20 +791,6 @@ Resources:
       SubnetId: !Ref 'LambdaSubnetAz2'
       RouteTableId: !Ref 'LambdaRouteTableAz2'
     DependsOn: [LambdaRouteTableAz2, LambdaSubnetAz2]
-  LambdaSubnetRouteTableAssociation3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired3
-    Properties:
-      SubnetId: !Ref 'LambdaSubnetAz3'
-      RouteTableId: !Ref 'LambdaRouteTableAz3'
-    DependsOn: [LambdaRouteTableAz3, LambdaSubnetAz3]
-  LambdaSubnetRouteTableAssociation4:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired4
-    Properties:
-      SubnetId: !Ref 'LambdaSubnetAz4'
-      RouteTableId: !Ref 'LambdaRouteTableAz4'
-    DependsOn: [LambdaRouteTableAz4, LambdaSubnetAz4]
   MGMTSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: NATGatewayNotRequired
@@ -965,20 +805,6 @@ Resources:
       SubnetId: !Ref 'MGMTSubnetAz2'
       RouteTableId: !Ref 'MGMTRouteTableAz2'
     DependsOn: [MGMTSubnetAz2]
-  MGMTSubnetRouteTableAssociation3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayNotRequired3
-    Properties:
-      SubnetId: !Ref 'MGMTSubnetAz3'
-      RouteTableId: !Ref 'MGMTRouteTableAz3'
-    DependsOn: [MGMTSubnetAz3]
-  MGMTSubnetRouteTableAssociation4:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayNotRequired4
-    Properties:
-      SubnetId: !Ref 'MGMTSubnetAz4'
-      RouteTableId: !Ref 'MGMTRouteTableAz4'
-    DependsOn: [MGMTSubnetAz4]
   NAT1SubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: NATGatewayRequired
@@ -993,20 +819,6 @@ Resources:
       SubnetId: !Ref 'NATGWSubnetAz2'
       RouteTableId: !Ref 'NATGWRouteTableAz2'
     DependsOn: [NATGWRouteTableAz2, NATGWSubnetAz2]
-  NAT3SubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired3
-    Properties:
-      SubnetId: !Ref 'NATGWSubnetAz3'
-      RouteTableId: !Ref 'NATGWRouteTableAz3'
-    DependsOn: [NATGWRouteTableAz3, NATGWSubnetAz3]
-  NAT4SubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired4
-    Properties:
-      SubnetId: !Ref 'NATGWSubnetAz4'
-      RouteTableId: !Ref 'NATGWRouteTableAz4'
-    DependsOn: [NATGWRouteTableAz4, NATGWSubnetAz4]
   MGMTSubnetRouteTableAssociationNAT1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: NATGatewayRequired
@@ -1021,20 +833,6 @@ Resources:
       SubnetId: !Ref 'MGMTSubnetAz2'
       RouteTableId: !Ref 'MGMTRouteTableAz2'
     DependsOn: [MGMTSubnetAz2]
-  MGMTSubnetRouteTableAssociationNAT3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired3
-    Properties:
-      SubnetId: !Ref 'MGMTSubnetAz3'
-      RouteTableId: !Ref 'MGMTRouteTableAz3'
-    DependsOn: [MGMTSubnetAz3]
-  MGMTSubnetRouteTableAssociationNAT4:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: NATGatewayRequired4
-    Properties:
-      SubnetId: !Ref 'MGMTSubnetAz4'
-      RouteTableId: !Ref 'MGMTRouteTableAz4'
-    DependsOn: [MGMTSubnetAz4]
   UNTRUSTSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -1062,36 +860,6 @@ Resources:
         Value: UNTRUST
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', UNTRUSTSubnet2]]
-    DependsOn: [VPC]
-  UNTRUSTSubnet3:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet3
-    Properties:
-      AvailabilityZone: !Select ['2', !Ref 'VpcAzs']
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['2', !Ref 'UntrustSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: UNTRUST
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', UNTRUSTSubnet3]]
-    DependsOn: [VPC]
-  UNTRUSTSubnet4:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet4
-    Properties:
-      AvailabilityZone: !Select ['3', !Ref 'VpcAzs']
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['3', !Ref 'UntrustSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: UNTRUST
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', UNTRUSTSubnet4]]
     DependsOn: [VPC]
   UNTRUSTRouteTable:
     Type: AWS::EC2::RouteTable
@@ -1123,20 +891,6 @@ Resources:
       SubnetId: !Ref 'UNTRUSTSubnet2'
       RouteTableId: !Ref 'UNTRUSTRouteTable'
     DependsOn: [UNTRUSTRoute, UNTRUSTSubnet2]
-  UNTRUSTSubnetRouteTableAssociation3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateSubnet3
-    Properties:
-      SubnetId: !Ref 'UNTRUSTSubnet3'
-      RouteTableId: !Ref 'UNTRUSTRouteTable'
-    DependsOn: [UNTRUSTRoute, UNTRUSTSubnet3]
-  UNTRUSTSubnetRouteTableAssociation4:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateSubnet4
-    Properties:
-      SubnetId: !Ref 'UNTRUSTSubnet4'
-      RouteTableId: !Ref 'UNTRUSTRouteTable'
-    DependsOn: [UNTRUSTRoute, UNTRUSTSubnet4]
   TRUSTSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -1164,36 +918,6 @@ Resources:
         Value: TRUST
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', TRUSTSubnet2]]
-    DependsOn: [VPC, InternetGateway]
-  TRUSTSubnet3:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet3
-    Properties:
-      AvailabilityZone: !Select ['2', !Ref 'VpcAzs']
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['2', !Ref 'TrustSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: TRUST
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', TRUSTSubnet3]]
-    DependsOn: [VPC, InternetGateway]
-  TRUSTSubnet4:
-    Type: AWS::EC2::Subnet
-    Condition: CreateSubnet4
-    Properties:
-      AvailabilityZone: !Select ['3', !Ref 'VpcAzs']
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['3', !Ref 'TrustSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: TRUST
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', TRUSTSubnet4]]
     DependsOn: [VPC, InternetGateway]
   TRUSTRouteTable:
     Type: AWS::EC2::RouteTable
@@ -1226,20 +950,6 @@ Resources:
       SubnetId: !Ref 'TRUSTSubnet2'
       RouteTableId: !Ref 'TRUSTRouteTable'
     DependsOn: [TRUSTSubnet2]
-  TRUSTSubnetRouteTableAssociation3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateSubnet3
-    Properties:
-      SubnetId: !Ref 'TRUSTSubnet3'
-      RouteTableId: !Ref 'TRUSTRouteTable'
-    DependsOn: [TRUSTSubnet3]
-  TRUSTSubnetRouteTableAssociation4:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateSubnet4
-    Properties:
-      SubnetId: !Ref 'TRUSTSubnet4'
-      RouteTableId: !Ref 'TRUSTRouteTable'
-    DependsOn: [TRUSTSubnet4]
   PublicLoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1267,30 +977,6 @@ Resources:
       LoadBalancerName: !Ref 'ELBName'
       SecurityGroups: [!Ref 'PublicLoadBalancerSecurityGroup']
       Subnets: [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2']
-      Listeners:
-      - LoadBalancerPort: '80'
-        InstancePort: '80'
-        Protocol: HTTP
-      ConnectionDrainingPolicy:
-        Enabled: true
-        Timeout: 300
-      ConnectionSettings:
-        IdleTimeout: 300
-      CrossZone: true
-      HealthCheck:
-        Target: HTTP:80/index.html
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
-        Interval: '30'
-        Timeout: '5'
-    DependsOn: [VPC, GatewayToInternet, PublicLoadBalancerSecurityGroup]
-  PublicElasticLoadBalancer3:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    Condition: CreateSubnet3
-    Properties:
-      LoadBalancerName: !Ref 'ELBName'
-      SecurityGroups: [!Ref 'PublicLoadBalancerSecurityGroup']
-      Subnets: [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2', !Ref 'UNTRUSTSubnet3']
       Listeners:
       - LoadBalancerPort: '80'
         InstancePort: '80'
@@ -1407,31 +1093,6 @@ Resources:
         Timeout: '5'
     DependsOn: [VPC, GatewayToInternet, PrivateLoadBalancerSecurityGroup, TRUSTSubnet1,
       TRUSTSubnet2]
-  PrivateElasticLoadBalancer3:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    Condition: CreateSubnet3
-    Properties:
-      LoadBalancerName: !Ref 'ILBName'
-      SecurityGroups: [!Ref 'PrivateLoadBalancerSecurityGroup']
-      Subnets: [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3']
-      Listeners:
-      - LoadBalancerPort: '80'
-        InstancePort: '80'
-        Protocol: HTTP
-      Scheme: internal
-      ConnectionDrainingPolicy:
-        Enabled: true
-        Timeout: 300
-      ConnectionSettings:
-        IdleTimeout: 300
-      HealthCheck:
-        Target: HTTP:80/index.html
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
-        Interval: '30'
-        Timeout: '5'
-    DependsOn: [VPC, GatewayToInternet, PrivateLoadBalancerSecurityGroup, TRUSTSubnet1,
-      TRUSTSubnet2]
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1468,27 +1129,6 @@ Resources:
         ResourceId: WebServerGroup
         PropagateAtLaunch: true
         Value: !Join ['-', [!Ref 'AWS::StackName', WebServerGroup]]
-        Key: Name
-  WebServerGroup3:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Condition: CreateSubnet3
-    DependsOn: [VPC, GatewayToInternet, WebServerLaunchConfig, InternetGateway, TRUSTSubnet1,
-      TRUSTSubnet2, TRUSTSubnet3]
-    Properties:
-      AvailabilityZones:
-      - !Select ['0', !Ref 'VpcAzs']
-      - !Select ['1', !Ref 'VpcAzs']
-      - !Select ['2', !Ref 'VpcAzs']
-      LaunchConfigurationName: !Ref 'WebServerLaunchConfig'
-      MinSize: '3'
-      MaxSize: '9'
-      LoadBalancerNames: [!Ref 'PrivateElasticLoadBalancer3']
-      VPCZoneIdentifier: [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3']
-      Tags:
-      - ResourceType: auto-scaling-group
-        ResourceId: WebServerGroup3
-        PropagateAtLaunch: true
-        Value: !Join ['-', [!Ref 'AWS::StackName', WebServerGroup3]]
         Key: Name
   WebServerLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -1589,22 +1229,6 @@ Resources:
       AutoScalingGroupName: !Ref 'WebServerGroup'
       Cooldown: '60'
       ScalingAdjustment: '-1'
-  WebServerScaleUpPolicy3:
-    Type: AWS::AutoScaling::ScalingPolicy
-    Condition: CreateSubnet3
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref 'WebServerGroup3'
-      Cooldown: '60'
-      ScalingAdjustment: '1'
-  WebServerScaleDownPolicy3:
-    Type: AWS::AutoScaling::ScalingPolicy
-    Condition: CreateSubnet3
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref 'WebServerGroup3'
-      Cooldown: '60'
-      ScalingAdjustment: '-1'
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Condition: CreateSubnet2
@@ -1636,38 +1260,6 @@ Resources:
       Dimensions:
       - Name: AutoScalingGroupName
         Value: !Ref 'WebServerGroup'
-      ComparisonOperator: LessThanThreshold
-  CPUAlarmHigh3:
-    Type: AWS::CloudWatch::Alarm
-    Condition: CreateSubnet3
-    Properties:
-      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '90'
-      AlarmActions: [!Ref 'WebServerScaleUpPolicy3']
-      Dimensions:
-      - Name: AutoScalingGroupName
-        Value: !Ref 'WebServerGroup3'
-      ComparisonOperator: GreaterThanThreshold
-  CPUAlarmLow3:
-    Type: AWS::CloudWatch::Alarm
-    Condition: CreateSubnet3
-    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions: [!Ref 'WebServerScaleDownPolicy3']
-      Dimensions:
-      - Name: AutoScalingGroupName
-        Value: !Ref 'WebServerGroup3'
       ComparisonOperator: LessThanThreshold
   az2n:
     Type: AWS::CloudFormation::Stack
@@ -1729,160 +1321,6 @@ Resources:
         AZSubnetIDMgmt: !Join [',', [!Ref 'MGMTSubnetAz1', !Ref 'MGMTSubnetAz2']]
         AZSubnetIDUntrust: !Join [',', [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2']]
         AZSubnetIDTrust: !Join [',', [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2']]
-        KeyName: !Ref 'KeyName'
-        MinInstancesASG: !Ref 'MinInstancesASG'
-        MaximumInstancesASG: !Ref 'MaximumInstancesASG'
-        ScaleUpThreshold: !Ref 'ScaleUpThreshold'
-        ScaleDownThreshold: !Ref 'ScaleDownThreshold'
-        ScalingParameter: !Ref 'ScalingParameter'
-        ScalingPeriod: !Ref 'ScalingPeriod'
-        PanS3BucketTpl: !Ref 'PanS3BucketTpl'
-        KeyPANWFirewall: !Ref 'KeyPANWFirewall'
-        KeyPANWPanorama: !Ref 'KeyPANWPanorama'
-        NATGateway: !Ref 'NATGateway'
-  az3n:
-    Type: AWS::CloudFormation::Stack
-    Condition: NATGatewayRequired3
-    DependsOn: [VPC, LambdaRouteTableAz1, LambdaRouteTableAz2, LambdaRouteTableAz3,
-      LambdaRoute1, LambdaRoute2, LambdaRoute3, NATGWRoute1, NATGWRoute2, NATGWRoute3,
-      NAT1SubnetRouteTableAssociation, NAT2SubnetRouteTableAssociation, NAT3SubnetRouteTableAssociation,
-      LambdaSubnetAz1, LambdaSubnetAz2, NAT1, NAT2, NAT3, LambdaSubnetRouteTableAssociation1,
-      LambdaSubnetRouteTableAssociation2, LambdaSubnetRouteTableAssociation3, GatewayToInternet,
-      InternetGateway, MGMTSubnetAz1, MGMTSubnetAz2, MGMTSubnetAz3, UNTRUSTSubnet1,
-      UNTRUSTSubnet2, UNTRUSTSubnet3, TRUSTSubnet1, TRUSTSubnet2, TRUSTSubnet3, PrivateElasticLoadBalancer3,
-      PublicElasticLoadBalancer3]
-    Properties:
-      TemplateURL: !Join [/, [!FindInMap [Constants, S3URL, URL1], !If [PANWCode,
-            !Join ['', [panw-aws-, !Ref 'AWS::Region', /, !FindInMap [VersionMap,
-                  Version, Key]]], !Ref 'PanS3BucketTpl'], !FindInMap [Constants,
-            S3MainTpl, TPL1]]]
-      Parameters:
-        VPCCIDR: !Ref 'VPCCIDR'
-        ILBName: !Ref 'ILBName'
-        ELBName: !Ref 'ELBName'
-        MasterS3Bucket: !Ref 'MasterS3Bucket'
-        FWInstanceType: !Ref 'FWInstanceType'
-        SSHLocation: !Ref 'SSHLocation'
-        VPCID: !Ref 'VPC'
-        AZSubnetIDMgmt: !Join [',', [!Ref 'MGMTSubnetAz1', !Ref 'MGMTSubnetAz2', !Ref 'MGMTSubnetAz3']]
-        AZSubnetIDUntrust: !Join [',', [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2',
-            !Ref 'UNTRUSTSubnet3']]
-        AZSubnetIDTrust: !Join [',', [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3']]
-        KeyName: !Ref 'KeyName'
-        MinInstancesASG: !Ref 'MinInstancesASG'
-        MaximumInstancesASG: !Ref 'MaximumInstancesASG'
-        ScaleUpThreshold: !Ref 'ScaleUpThreshold'
-        ScaleDownThreshold: !Ref 'ScaleDownThreshold'
-        ScalingParameter: !Ref 'ScalingParameter'
-        ScalingPeriod: !Ref 'ScalingPeriod'
-        PanS3BucketTpl: !Ref 'PanS3BucketTpl'
-        KeyPANWFirewall: !Ref 'KeyPANWFirewall'
-        KeyPANWPanorama: !Ref 'KeyPANWPanorama'
-        NATGateway: !Ref 'NATGateway'
-        AZSubnetIDNATGW: !Join [',', [!Ref 'NATGWSubnetAz1', !Ref 'NATGWSubnetAz2',
-            !Ref 'NATGWSubnetAz3']]
-        AZSubnetIDLambda: !Join [',', [!Ref 'LambdaSubnetAz1', !Ref 'LambdaSubnetAz2',
-            !Ref 'LambdaSubnetAz3']]
-  az3:
-    Type: AWS::CloudFormation::Stack
-    Condition: NATGatewayNotRequired3
-    DependsOn: [VPC, MGMTRouteTableAz1, MGMTRouteTableAz2, MGMTRouteTableAz3, GatewayToInternet,
-      InternetGateway, MGMTSubnetAz1, MGMTSubnetAz2, MGMTSubnetAz3, UNTRUSTSubnet1,
-      UNTRUSTSubnet2, UNTRUSTSubnet3, TRUSTSubnet1, TRUSTSubnet2, TRUSTSubnet3, PrivateElasticLoadBalancer3,
-      PublicElasticLoadBalancer3]
-    Properties:
-      TemplateURL: !Join [/, [!FindInMap [Constants, S3URL, URL1], !If [PANWCode,
-            !Join ['', [panw-aws-, !Ref 'AWS::Region', /, !FindInMap [VersionMap,
-                  Version, Key]]], !Ref 'PanS3BucketTpl'], !FindInMap [Constants,
-            S3MainTpl, TPL1]]]
-      Parameters:
-        VPCCIDR: !Ref 'VPCCIDR'
-        ILBName: !Ref 'ILBName'
-        ELBName: !Ref 'ELBName'
-        MasterS3Bucket: !Ref 'MasterS3Bucket'
-        FWInstanceType: !Ref 'FWInstanceType'
-        SSHLocation: !Ref 'SSHLocation'
-        VPCID: !Ref 'VPC'
-        AZSubnetIDMgmt: !Join [',', [!Ref 'MGMTSubnetAz1', !Ref 'MGMTSubnetAz2', !Ref 'MGMTSubnetAz3']]
-        AZSubnetIDUntrust: !Join [',', [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2',
-            !Ref 'UNTRUSTSubnet3']]
-        AZSubnetIDTrust: !Join [',', [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3']]
-        KeyName: !Ref 'KeyName'
-        MinInstancesASG: !Ref 'MinInstancesASG'
-        MaximumInstancesASG: !Ref 'MaximumInstancesASG'
-        ScaleUpThreshold: !Ref 'ScaleUpThreshold'
-        ScaleDownThreshold: !Ref 'ScaleDownThreshold'
-        ScalingParameter: !Ref 'ScalingParameter'
-        ScalingPeriod: !Ref 'ScalingPeriod'
-        PanS3BucketTpl: !Ref 'PanS3BucketTpl'
-        KeyPANWFirewall: !Ref 'KeyPANWFirewall'
-        KeyPANWPanorama: !Ref 'KeyPANWPanorama'
-        NATGateway: !Ref 'NATGateway'
-  az4n:
-    Type: AWS::CloudFormation::Stack
-    Condition: NATGatewayRequired4
-    DependsOn: [GatewayToInternet, InternetGateway, MGMTSubnetAz1, MGMTSubnetAz2,
-      MGMTSubnetAz3, MGMTSubnetAz4, UNTRUSTSubnet1, UNTRUSTSubnet2, UNTRUSTSubnet3,
-      UNTRUSTSubnet4, TRUSTSubnet1, TRUSTSubnet2, TRUSTSubnet3, TRUSTSubnet4]
-    Properties:
-      TemplateURL: !Join [/, [!FindInMap [Constants, S3URL, URL1], !If [PANWCode,
-            !Join ['', [panw-aws-, !Ref 'AWS::Region', /, !FindInMap [VersionMap,
-                  Version, Key]]], !Ref 'PanS3BucketTpl'], !FindInMap [Constants,
-            S3MainTpl, TPL1]]]
-      Parameters:
-        VPCCIDR: !Ref 'VPCCIDR'
-        ILBName: !Ref 'ILBName'
-        ELBName: !Ref 'ELBName'
-        MasterS3Bucket: !Ref 'MasterS3Bucket'
-        FWInstanceType: !Ref 'FWInstanceType'
-        SSHLocation: !Ref 'SSHLocation'
-        VPCID: !Ref 'VPC'
-        AZSubnetIDMgmt: !Join [',', [!Ref 'MGMTSubnetAz1', !Ref 'MGMTSubnetAz2', !Ref 'MGMTSubnetAz3',
-            !Ref 'MGMTSubnetAz4']]
-        AZSubnetIDUntrust: !Join [',', [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2',
-            !Ref 'UNTRUSTSubnet3', !Ref 'UNTRUSTSubnet4']]
-        AZSubnetIDTrust: !Join [',', [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3',
-            !Ref 'TRUSTSubnet4']]
-        KeyName: !Ref 'KeyName'
-        MinInstancesASG: !Ref 'MinInstancesASG'
-        MaximumInstancesASG: !Ref 'MaximumInstancesASG'
-        ScaleUpThreshold: !Ref 'ScaleUpThreshold'
-        ScaleDownThreshold: !Ref 'ScaleDownThreshold'
-        ScalingParameter: !Ref 'ScalingParameter'
-        ScalingPeriod: !Ref 'ScalingPeriod'
-        PanS3BucketTpl: !Ref 'PanS3BucketTpl'
-        KeyPANWFirewall: !Ref 'KeyPANWFirewall'
-        KeyPANWPanorama: !Ref 'KeyPANWPanorama'
-        NATGateway: !Ref 'NATGateway'
-        AZSubnetIDNATGW: !Join [',', [!Ref 'NATGWSubnetAz1', !Ref 'NATGWSubnetAz2',
-            !Ref 'NATGWSubnetAz3', !Ref 'NATGWSubnetAz4']]
-        AZSubnetIDLambda: !Join [',', [!Ref 'LambdaSubnetAz1', !Ref 'LambdaSubnetAz2',
-            !Ref 'LambdaSubnetAz3', !Ref 'LambdaSubnetAz4']]
-  az4:
-    Type: AWS::CloudFormation::Stack
-    Condition: NATGatewayNotRequired4
-    DependsOn: [GatewayToInternet, InternetGateway, MGMTSubnetAz1, MGMTSubnetAz2,
-      MGMTSubnetAz3, MGMTSubnetAz4, UNTRUSTSubnet1, UNTRUSTSubnet2, UNTRUSTSubnet3,
-      UNTRUSTSubnet4, TRUSTSubnet1, TRUSTSubnet2, TRUSTSubnet3, TRUSTSubnet4]
-    Properties:
-      TemplateURL: !Join [/, [!FindInMap [Constants, S3URL, URL1], !If [PANWCode,
-            !Join ['', [panw-aws-, !Ref 'AWS::Region', /, !FindInMap [VersionMap,
-                  Version, Key]]], !Ref 'PanS3BucketTpl'], !FindInMap [Constants,
-            S3MainTpl, TPL1]]]
-      Parameters:
-        VPCCIDR: !Ref 'VPCCIDR'
-        ILBName: !Ref 'ILBName'
-        ELBName: !Ref 'ELBName'
-        MasterS3Bucket: !Ref 'MasterS3Bucket'
-        FWInstanceType: !Ref 'FWInstanceType'
-        SSHLocation: !Ref 'SSHLocation'
-        VPCID: !Ref 'VPC'
-        AZSubnetIDMgmt: !Join [',', [!Ref 'MGMTSubnetAz1', !Ref 'MGMTSubnetAz2', !Ref 'MGMTSubnetAz3',
-            !Ref 'MGMTSubnetAz4']]
-        AZSubnetIDUntrust: !Join [',', [!Ref 'UNTRUSTSubnet1', !Ref 'UNTRUSTSubnet2',
-            !Ref 'UNTRUSTSubnet3', !Ref 'UNTRUSTSubnet4']]
-        AZSubnetIDTrust: !Join [',', [!Ref 'TRUSTSubnet1', !Ref 'TRUSTSubnet2', !Ref 'TRUSTSubnet3',
-            !Ref 'TRUSTSubnet4']]
         KeyName: !Ref 'KeyName'
         MinInstancesASG: !Ref 'MinInstancesASG'
         MaximumInstancesASG: !Ref 'MaximumInstancesASG'
