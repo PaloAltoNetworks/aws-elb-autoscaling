@@ -230,7 +230,7 @@ Mappings:
     S3URL:
       URL1: https://s3.amazonaws.com
     S3MainTpl:
-      TPL1: firewall.template
+      TPL1: firewall.yaml
   AWSInstanceType2Arch:
     t1.micro:
       Arch: PV64
