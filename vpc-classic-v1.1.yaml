@@ -103,34 +103,42 @@ Parameters:
     Type: String
     MinLength: '6'
     MaxLength: '24'
-    Default: panwVPC
+    Default: WE1Prod
   VPCCIDR:
     Type: String
-    Default: 192.168.0.0/16
+    Default: 172.30.0.0/20
     Description: Enter the VPC CIDR that you want to use
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
     ConstraintDescription: must be a valid CIDR range of the form x.x.x.x/x.
   MgmtSubnetIpBlocks:
     Description: Management subnet comma-delimited list of CIDR blocks
     Type: CommaDelimitedList
-    Default: 192.168.0.0/24, 192.168.10.0/24, 192.168.20.0/24
+    Default: 172.30.0.0/24, 172.30.8.0/24
   UntrustSubnetIpBlocks:
     Description: Untrust subnet comma-delimited list of CIDR blocks
     Type: CommaDelimitedList
-    Default: 192.168.1.0/24, 192.168.11.0/24, 192.168.21.0/24
+    Default: 172.30.1.0/24, 172.30.9.0/24
   TrustSubnetIpBlocks:
     Description: Trust subnet comma-delimited list of CIDR blocks
     Type: CommaDelimitedList
-    Default: 192.168.2.0/24, 192.168.12.0/24, 192.168.22.0/24
+    Default: 172.30.2.0/24, 172.30.10.0/24
   NATGWSubnetIpBlocks:
     Description: AWS NAT Gateway Comma-delimited list of CIDR blocks
     Type: CommaDelimitedList
-    Default: 192.168.100.0/24, 192.168.101.0/24, 192.168.102.0/24
+    Default: 172.30.3.0/24, 172.30.11.0/24
   LambdaSubnetIpBlocks:
     Description: 'Lambda Funcion Subnets for AZ: Comma-delimited list of CIDR blocks
       only if NAT Gateway is needed'
     Type: CommaDelimitedList
-    Default: 192.168.200.0/24, 192.168.201.0/24, 192.168.202.0/24
+    Default: 172.30.4.0/24, 172.30.12.0/24
+  AppSubnetIpBlocks:
+    Description: 'Application Subnets for AZ: Comma-delimited list of CIDR blocks'
+    Type: CommaDelimitedList
+    Default: 172.30.6.0/24, 172.30.14.0/24
+  DatabaseSubnetIpBlocks:
+    Description: 'Database Subnets for AZ: Comma-delimited list of CIDR blocks'
+    Type: CommaDelimitedList
+    Default: 172.30.7.0/24, 172.30.15.0/24
   NATGateway:
     Type: String
     Default: 'Yes'
