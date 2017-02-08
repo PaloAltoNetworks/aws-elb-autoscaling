@@ -389,18 +389,10 @@ Mappings:
       Key: v1.1
 Conditions:
   CreateSubnet2: !Equals [!Ref 'NumberOfAZs', '2']
-  CreateSubnetAz3: !Equals [!Ref 'NumberOfAZs', '3']
-  CreateSubnet3: !Or [!Equals [!Ref 'NumberOfAZs', '3'], !Equals [!Ref 'NumberOfAZs',
-      '4']]
-  CreateSubnet4: !Equals [!Ref 'NumberOfAZs', '4']
   NATGatewayRequired: !Equals [!Ref 'NATGateway', 'Yes']
   NATGatewayRequired2: !And [!Equals [!Ref 'NATGateway', 'Yes'], {Condition: CreateSubnet2}]
-  NATGatewayRequired3: !And [!Equals [!Ref 'NATGateway', 'Yes'], {Condition: CreateSubnet3}]
-  NATGatewayRequired4: !And [!Equals [!Ref 'NATGateway', 'Yes'], {Condition: CreateSubnet4}]
   NATGatewayNotRequired: !Equals [!Ref 'NATGateway', 'No']
   NATGatewayNotRequired2: !And [!Equals [!Ref 'NATGateway', 'No'], {Condition: CreateSubnet2}]
-  NATGatewayNotRequired3: !And [!Equals [!Ref 'NATGateway', 'No'], {Condition: CreateSubnet3}]
-  NATGatewayNotRequired4: !And [!Equals [!Ref 'NATGateway', 'No'], {Condition: CreateSubnet4}]
   PANWCode: !Equals [!Join ['-', [!Ref 'PanS3BucketTpl', !Ref 'AWS::Region']], !FindInMap [
       BucketRegionMap, !Ref 'AWS::Region', Name]]
 Resources:
@@ -447,38 +439,6 @@ Resources:
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', LambdaSubnetAz2]]
     DependsOn: [VPC]
-  LambdaSubnetAz3:
-    Type: AWS::EC2::Subnet
-    Condition: NATGatewayRequired3
-    Properties:
-      AvailabilityZone: !Select ['2', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['2', !Ref 'LambdaSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: LambdaFunction
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', LambdaSubnetAz3]]
-    DependsOn: [VPC]
-  LambdaSubnetAz4:
-    Type: AWS::EC2::Subnet
-    Condition: NATGatewayRequired4
-    Properties:
-      AvailabilityZone: !Select ['3', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['3', !Ref 'LambdaSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: LambdaFunction
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', LambdaSubnetAz4]]
-    DependsOn: [VPC]
   LambdaRouteTableAz1:
     Type: AWS::EC2::RouteTable
     Condition: NATGatewayRequired
@@ -500,28 +460,6 @@ Resources:
         Value: !Ref 'AWS::StackId'
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', LambdaRouteTableAz2]]
-    DependsOn: [VPC]
-  LambdaRouteTableAz3:
-    Type: AWS::EC2::RouteTable
-    Condition: NATGatewayRequired3
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', LambdaRouteTableAz3]]
-    DependsOn: [VPC]
-  LambdaRouteTableAz4:
-    Type: AWS::EC2::RouteTable
-    Condition: NATGatewayRequired4
-    Properties:
-      VpcId: !Ref 'VPC'
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', LambdaRouteTableAz4]]
     DependsOn: [VPC]
   NATGWSubnetAz1:
     Type: AWS::EC2::Subnet
@@ -555,38 +493,6 @@ Resources:
       - Key: Name
         Value: !Join ['-', [!Ref 'AWS::StackName', NATGWSubnetAz2]]
     DependsOn: [VPC]
-  NATGWSubnetAz3:
-    Type: AWS::EC2::Subnet
-    Condition: NATGatewayRequired3
-    Properties:
-      AvailabilityZone: !Select ['2', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['2', !Ref 'NATGWSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: NATGW
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', NATGWSubnetAz3]]
-    DependsOn: [VPC]
-  NATGWSubnetAz4:
-    Type: AWS::EC2::Subnet
-    Condition: NATGatewayRequired4
-    Properties:
-      AvailabilityZone: !Select ['3', !Ref 'VpcAzs']
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref 'VPC'
-      CidrBlock: !Select ['3', !Ref 'NATGWSubnetIpBlocks']
-      Tags:
-      - Key: Application
-        Value: !Ref 'AWS::StackId'
-      - Key: Network
-        Value: NATGW
-      - Key: Name
-        Value: !Join ['-', [!Ref 'AWS::StackName', NATGWSubnetAz4]]
-    DependsOn: [VPC]
   EIP1:
     Type: AWS::EC2::EIP
     Condition: NATGatewayRequired
@@ -596,18 +502,6 @@ Resources:
   EIP2:
     Type: AWS::EC2::EIP
     Condition: NATGatewayRequired
-    Properties:
-      Domain: VPC
-    DependsOn: [VPC, GatewayToInternet, InternetGateway]
-  EIP3:
-    Type: AWS::EC2::EIP
-    Condition: NATGatewayRequired3
-    Properties:
-      Domain: VPC
-    DependsOn: [VPC, GatewayToInternet, InternetGateway]
-  EIP4:
-    Type: AWS::EC2::EIP
-    Condition: NATGatewayRequired4
     Properties:
       Domain: VPC
     DependsOn: [VPC, GatewayToInternet, InternetGateway]
