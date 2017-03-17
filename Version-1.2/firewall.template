@@ -1,0 +1,764 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "VM-Series Firewall Deployment template",
+  "Parameters" : {
+    "VPCCIDR": {
+      "Type": "String",
+      "Default": "192.168.0.0/16",
+      "Description": "Enter the VPC CIDR that you want to use",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "ELBName": {
+      "Type" : "String",
+      "Description": "Enter the name of the Elastic Load Balancer",
+      "Default": "public-elb"
+    },
+    "ILBName": {
+      "Type" : "String",
+      "Description": "Enter the name of the Internal Load Balancer",
+      "Default": "private-ilb"
+    },
+    "KeyPANWFirewall": {
+      "Type" : "String",
+      "Description": "API Key associated to username/password of the VM-Series Firewall. By default it is admin/admin",
+      "Default": "LUFRPT1Zd2pYUGpkMUNrVEZlb3hROEQyUm95dXNGRkU9N0d4RGpTN2VZaVZYMVVoS253U0p6dlk3MkM0SDFySEh2UUR4Y3hzK2g3ST0=",
+      "AllowedPattern": "[\\S0-9a-zA-Z]+",
+      "NoEcho" : "true"
+    },
+    "KeyPANWPanorama": {
+      "Type" : "String",
+      "Description": "API Key associated to username/password of the VM-Series Panorama. By default it is admin/admin",
+      "NoEcho" : "true"
+    },
+    "NATGateway": {
+      "Type": "String",
+      "Default": "Yes",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Description": "Yes = If you created AWS NAT Gateway in each AZ, No = Use Public IPs"
+    },
+    "MasterS3Bucket": {
+      "Type" : "String",
+      "Description": "Enter the name of the Bootstrap S3 bucket having bootstrap config",
+      "MinLength" : "3",
+      "MaxLength" : "63"
+    },
+    "SSHLocation" : {
+      "Description" : "Restruit SSH access to the VM-Series firewall (by default can be accessed from anywhere)",
+      "Type" : "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default" : "199.167.52.5/32",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "VPCID" : {
+      "Description" : "VPC ID",
+      "Type" : "AWS::EC2::VPC::Id"
+    },
+    "AZSubnetIDLambda": {
+        "Description": "Subnet IDs of Lambda Function interface",
+        "Type" : "CommaDelimitedList",
+        "Default": "None"
+    },
+    "AZSubnetIDNATGW": {
+        "Description": "Subnet IDs of AWS NAT Gateway ",
+        "Type" : "CommaDelimitedList",
+        "Default": "None"
+    },
+    "AZSubnetIDMgmt" : {
+      "Type" : "List<AWS::EC2::Subnet::Id>",
+      "Description": "Enter Subnet ID for the mgmt interface for all the AZs"
+    },
+    "AZSubnetIDUntrust" : {
+      "Type" : "List<AWS::EC2::Subnet::Id>",
+      "Description": "Enter Subnet ID for the untrust interface for all the AZs"
+    },
+    "AZSubnetIDTrust" : {
+      "Type" : "List<AWS::EC2::Subnet::Id>",
+      "Description": "Enter Subnet ID for the trust interface for all the AZs"
+    },
+    "KeyName" : {
+      "Description" : "Amazon EC2 Key Pair",
+      "Type" : "AWS::EC2::KeyPair::KeyName"
+    },
+    "FWInstanceType": {
+      "Type": "String",
+      "Default": "m4.xlarge",
+      "AllowedValues": [
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c4.xlarge",
+        "c4.2xlarge",   
+        "c4.4xlarge",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge"
+      ],
+      "Description": "Enter the instance type and size that you want for the AutoScaled VM-Series firewall"
+    },
+    "PanFwAmiId": {
+    	"Type": "AWS::EC2::Image::Id",
+    	"Description": "Link to Ami Id lookup table: https://www.paloaltonetworks.com/documentation/global/compatibility-matrix/vm-series-firewalls/aws-cft-amazon-machine-images-ami-list"
+    },
+    "KeyDeLicense": {
+    	"Type": "String",
+    	"Default": "",
+    	"Description": "Key used to de-license the PAN FW"
+    },
+    "MinInstancesASG": {
+      "Type": "Number",
+      "Default": "1",
+      "Description": "Minimum number of VM-Series firewall the ASG"
+    },
+    "MaximumInstancesASG": {
+      "Type": "Number",
+      "Default": "3",
+      "Description": "Maximum number of VM-Series firewal in the ASG"
+    },
+    "ScaleUpThreshold": {
+      "Type": "Number",
+      "Default": "80",
+      "Description": "Value at which ScaleUp event would take place"
+    },
+    "ScaleDownThreshold": { 
+      "Type": "Number",
+      "Default": "40",
+      "Description": "Value at which ScaleDown event would take place"
+    },
+    "ScalingParameter": {
+      "Type": "String",
+      "Default": "DataPlaneCPUUtilization",
+      "AllowedValues": [
+        "DataPlaneCPUUtilization",
+        "ActiveSessions",
+        "DataPlaneBufferUtilization"
+      ],
+      "Description": "Refer to guide for recommended values for ScaleUp and ScaleDown"
+    },
+    "ScalingPeriod": {
+      "Type": "String",
+      "Default": "900",
+      "Description": "The period in seconds over which the average statistic is applied. Must be multiple of 60"
+    },
+    "PanS3BucketTpl": {
+      "Type" : "String",
+      "Description": "VM-Series firewall Lambda/Scripts/CFT template S3 Bucket or your own in the same region",
+      "Default": "panw-aws"
+    }
+  },
+  "Mappings": {
+    "BucketRegionMap" : {
+      "us-west-2"     : { "Name": "panw-aws-us-west-2" },
+      "us-west-1"     : { "Name": "panw-aws-us-west-1" },
+      "us-east-1"     : { "Name": "panw-aws-us-east-1" },
+      "us-east-2"     : { "Name": "panw-aws-us-east-2" },
+      "eu-west-1"     : { "Name": "panw-aws-eu-west-1" },
+      "eu-central-1"     : { "Name": "panw-aws-eu-central-1" },
+      "ap-northeast-1"     : { "Name": "panw-aws-ap-northeast-1" },
+      "ap-northeast-2"     : { "Name": "panw-aws-ap-northeast-2" },
+      "ap-southeast-1"     : { "Name": "panw-aws-ap-southeast-1" },
+      "ap-southeast-2"     : { "Name": "panw-aws-ap-southeast-2" },
+      "sa-east-1"     : { "Name": "panw-aws-sa-east-1" },
+      "ap-south-1"     : { "Name": "panw-aws-ap-south-1" }
+    },
+    "VersionMap" : {
+      "Version"     : { "Key": "v1.2/panw-aws.zip" }
+    },
+    "KeyMap" : {
+      "Key"     : { "Key": "panw-aws.zip" }
+    }
+  },
+  "Conditions" : {
+    "PANWCode" : {"Fn::Equals" : [{ "Fn::Join": [ "-", [ { "Ref": "PanS3BucketTpl" }, { "Ref": "AWS::Region" }]]}, { "Fn::FindInMap" : [ "BucketRegionMap", { "Ref" : "AWS::Region" }, "Name" ] }]},
+    "NATGatewayRequired": {"Fn::Equals": [{"Ref": "NATGateway"}, "Yes"]}
+  },
+  "Rules" : {
+    "AZSubnetIDMgmt" : {
+      "Assertions" : [ {
+        "Assert" :  {"Fn::EachMemberIn" : [ {"Fn::ValueOfAll" : ["AWS::EC2::Subnet::Id", "VpcId"]}, {"Fn::RefAll" : "AWS::EC2::VPC::Id"} ]},
+        "AssertDescription" : "Subnets must belong to the same VPC"
+      }
+     ]
+    },
+    "AZSubnetIDUntrust" : {
+      "Assertions" : [ {
+        "Assert" :  {"Fn::EachMemberIn" : [ {"Fn::ValueOfAll" : ["AWS::EC2::Subnet::Id", "VpcId"]}, {"Fn::RefAll" : "AWS::EC2::VPC::Id"} ]},
+        "AssertDescription" : "Subnets must belong to the same VPC"
+      }
+     ]
+    },
+    "AZSubnetIDTrust" : {
+      "Assertions" : [ {
+        "Assert" :  {"Fn::EachMemberIn" : [ {"Fn::ValueOfAll" : ["AWS::EC2::Subnet::Id", "VpcId"]}, {"Fn::RefAll" : "AWS::EC2::VPC::Id"} ]},
+        "AssertDescription" : "Subnets must belong to the same VPC"
+      }
+     ]
+    }
+  },
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+      {
+        "Label" : {"default": "VPC Configuration"},
+        "Parameters" : ["VPCID", "VPCCIDR", "AZSubnetIDMgmt", "AZSubnetIDUntrust", "AZSubnetIDTrust", "AZSubnetIDLambda",
+                        "AZSubnetIDNATGW", "NATGateway"]
+      },
+      {
+        "Label" : {"default": "VM-Series firewall Instance configuration"},
+        "Parameters" : ["FWInstanceType", "PanFwAmiId", "KeyName", "SSHLocation"]
+      },
+      {
+        "Label" : {"default": "S3 Bucket details"},
+        "Parameters" : ["MasterS3Bucket", "PanS3BucketTpl"]
+      },
+      {
+        "Label" : {"default": "VM-Series API Key"},
+        "Parameters" : ["KeyPANWFirewall", "KeyPANWPanorama"]
+      },
+      {
+        "Label" : {"default": "Load Balancer configuration"},
+        "Parameters" : ["ELBName", "ILBName"]
+      },
+      {
+        "Label" : {"default": "Auto Scaling Group configurations"},
+        "Parameters" : ["ScalingParameter", "ScalingPeriod", "MaximumInstancesASG",
+                        "MinInstancesASG", "ScaleDownThreshold", "ScaleUpThreshold"
+                        ]
+      }
+      ],
+      "ParameterLabels" : {
+        "FWInstanceType": {"default": "Firewall Instance size:"},
+        "PanFwAmiId": {"default": "The Ami Id of the PAN FW Image"},
+        "KeyName": {"default": "Key pair:"},
+        "SSHLocation": {"default": "SSH From:"},
+        "MasterS3Bucket": {"default": "Bootstrap bucket for VM-Series firewalls"},
+        "PanS3BucketTpl": {"default": "S3 Bucket Name for templates and Lambda Code:"},
+        "KeyPANWFirewall": {"default": "API Key for Firewall:"},
+        "KeyPANWPanorama": {"default": "API Key for Panorama:"},
+        "ELBName": {"default": "Name of Elastic Load Balancer:"},
+        "ILBName": {"default": "Name of Internal Load Balancer:"},
+        "NATGateway": {"default": "Select Yes if you created AWS NAT Gateway"},
+        "ScalingParameter": {"default": "Choose your Scaling Parameter:"},
+        "ScalingPeriod": {"default": "Choose time in seconds for ScaleUp or ScaleIn event:"},
+        "MinInstancesASG": {"default": "Minimum VM-Series Instances:"},
+        "MaximumInstancesASG": {"default": "Maximum VM-Series Instances:"},
+        "ScaleUpThreshold": {"default": "ScaleUp threshold value in percentage/value:"},
+        "ScaleDownThreshold": {"default": "ScaleDown threshold value in percentage/value:"},
+        "VPCID": {"default": "Select VPC ID from the list:"},
+        "AZSubnetIDMgmt": {"default": "Subnet ID of Management Interface:"},
+        "AZSubnetIDUntrust": {"default": "Subnet ID of Untrust Interface:"},
+        "AZSubnetIDTrust": {"default": "Subnet ID of Trust Interface:"},
+        "AZSubnetIDLambda": {"default": "Subnet ID for Lambda:"},
+        "AZSubnetIDNATGW": {"default": "Subnet ID for AWS NAT Gateway:"}
+      }                 
+    }                   
+  },
+  "Resources" : {
+    "FirewallBootstrapRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [ {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                "Action": "sts:AssumeRole"
+                } ]
+            },
+            "Path":"/",
+            "Policies": [ {
+                "PolicyName" : "FirewallBootstrapRolePolicy",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Action": "s3:ListBucket",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "MasterS3Bucket" }] ] }
+                    },
+                    {  
+                        "Effect": "Allow",
+                        "Action": "s3:GetObject",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "MasterS3Bucket" }, "/*" ] ] }
+                    }
+                    ]
+                }
+            }]
+        }
+    },  
+    "FirewallBootstrapInstanceProfile":{
+        "Type": "AWS::IAM::InstanceProfile",
+        "Properties": {
+          "Path": "/",
+          "Roles": [ {
+              "Ref": "FirewallBootstrapRole"
+            }]
+        },
+        "DependsOn": [ "FirewallBootstrapRole" ]
+    },
+    "MgmtSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH to MGMT interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "MgmtSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22",  "CidrIp" : { "Ref" : "SSHLocation" }},
+				  { "IpProtocol" : "tcp", "FromPort" : "443",  "ToPort" : "443",  "CidrIp" : { "Ref" : "SSHLocation" } },
+				  { "IpProtocol" : "-1", "FromPort" : "-1",  "ToPort" : "-1",  "CidrIp" : { "Ref" : "VPCCIDR" } },
+				  { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "CidrIp" : { "Ref" : "VPCCIDR" } }],
+        "SecurityGroupEgress"  : [ { "IpProtocol" : "-1", "FromPort" : "-1",  "ToPort" : "-1",  "CidrIp" : "0.0.0.0/0" }]
+      }
+    },
+    "UntrustSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for Untrust interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "UntrustSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "TrustSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for trust interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "TrustSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "VPCSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for within VPC",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "VPCSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "LambdaExecutionRole" : {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [ {
+                 "Effect": "Allow",
+                 "Principal": {
+                 "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              } ]
+            },
+            "Path":"/",
+            "Policies": [ {
+              "PolicyName": "LambdaExecutionRolePolicy",
+              "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Effect": "Allow",
+                    "Action": "s3:ListBucket",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "MasterS3Bucket" }, "/*" ] ] }
+                },
+                {  
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "MasterS3Bucket" }, "/*" ] ] }
+                },
+                {
+                        "Effect": "Allow",
+                        "Action": "s3:ListBucket",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::FindInMap" : [ "BucketRegionMap", { "Ref" : "AWS::Region" }, "Name" ] }] ] }
+                },
+                {  
+                        "Effect": "Allow",
+                        "Action": "s3:GetObject",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::FindInMap" : [ "BucketRegionMap", { "Ref" : "AWS::Region" }, "Name" ] }, "/*" ] ] }
+                },
+                {
+                        "Effect": "Allow",
+                        "Action": "s3:ListBucket",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWCode", { "Fn::Join": [ "-", [ "panw-aws", { "Ref": "AWS::Region" }]]}, { "Ref" : "PanS3BucketTpl" }] }] ] }
+                },
+                {  
+                        "Effect": "Allow",
+                        "Action": "s3:GetObject",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWCode", { "Fn::Join": [ "-", [ "panw-aws", { "Ref": "AWS::Region" }]]}, { "Ref" : "PanS3BucketTpl" }] }, "/*" ] ] }
+                },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress",
+                "ec2:AssociateRouteTable",
+                "ec2:AttachInternetGateway",
+                "ec2:AttachNetworkInterface",
+                "ec2:CreateNetworkInterface",
+                "ec2:CreateTags",
+                "ec2:DeleteNetworkInterface",
+                "ec2:DeleteRouteTable",
+                "ec2:DeleteSecurityGroup",
+                "ec2:DeleteTags",
+                "ec2:DescribeAddresses",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceStatus",
+                "ec2:DescribeInstances",
+                "ec2:DescribeImages",
+                "ec2:DescribeNatGateways",
+                "ec2:DescribeNetworkInterfaceAttribute",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeTags",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DetachInternetGateway",
+                "ec2:DetachNetworkInterface",
+                "ec2:DetachVolume",
+                "ec2:DisassociateAddress",
+                "ec2:DisassociateRouteTable",
+                "ec2:ModifyNetworkInterfaceAttribute",
+                "ec2:ModifySubnetAttribute",
+                "ec2:MonitorInstances",
+                "ec2:RebootInstances",
+                "ec2:ReleaseAddress",
+                "ec2:ReportInstanceStatus",
+                "ec2:TerminateInstances",
+                "ec2:DescribeIdFormat"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "events:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:CreateEventSourceMapping",
+                "lambda:CreateFunction",
+                "lambda:DeleteEventSourceMapping",
+                "lambda:DeleteFunction",
+                "lambda:GetEventSourceMapping",
+                "lambda:ListEventSourceMappings",
+                "lambda:RemovePermission",
+                "lambda:UpdateEventSourceMapping",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:GetFunction",
+                "lambda:ListFunctions"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:SetQueueAttributes",
+                "sqs:PurgeQueue"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:AddTags",
+                "elasticloadbalancing:AttachLoadBalancerToSubnets",
+                "elasticloadbalancing:ConfigureHealthCheck",
+                "elasticloadbalancing:DescribeInstanceHealth",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "elasticloadbalancing:DescribeLoadBalancerPolicyTypes",
+                "elasticloadbalancing:DescribeLoadBalancerPolicies",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:DescribeTags",
+                "elasticloadbalancing:DetachLoadBalancerFromSubnets",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:RemoveTags"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole",
+                "iam:GetRole"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+          "Resource": "arn:aws:logs:*:*:*"
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["cloudformation:DescribeStacks"],
+          "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutDestination",
+                "logs:PutDestinationPolicy",
+                "logs:PutLogEvents",
+                "logs:PutMetricFilter"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+        ]
+      }}]}
+    },
+    "AddENILambda" : {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+          "Handler": "add_eni.lambda_handler",
+          "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+          "Code": {
+            "S3Bucket": { "Fn::If" : [ "PANWCode", { "Fn::Join": [ "-", [ "panw-aws", { "Ref": "AWS::Region" }]]}, { "Ref" : "PanS3BucketTpl" }] },
+            "S3Key": { "Fn::If" : [ "PANWCode", { "Fn::FindInMap" : [ "VersionMap", "Version", "Key" ] }, 
+			{ "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] }] }
+          },
+          "Runtime": "python2.7",
+          "Timeout": "300",
+          "VpcConfig": {
+          	"SubnetIds": { "Fn::If": [ "NATGatewayRequired", {"Ref": "AZSubnetIDLambda"}, []]},
+          	"SecurityGroupIds": { "Fn::If": [ "NATGatewayRequired", [{"Ref": "VPCSecurityGroup"}], []]}
+          }
+        },
+        "DependsOn": [ "LambdaExecutionRole", "VPCSecurityGroup" ]
+    },
+    "LambdaENIQueue": {
+   		"Type" : "AWS::SQS::Queue",
+        "DependsOn": [ "InitLambda" ]
+	}, 
+    "LambdaENISNSTopic" : {
+        "Type" : "AWS::SNS::Topic",
+        "Properties" : {
+            "Subscription" : [ {
+            "Endpoint" : { "Fn::GetAtt" : ["AddENILambda", "Arn"]},
+            "Protocol" : "lambda"
+            } ]
+        },
+        "DependsOn": [ "AddENILambda" ]
+    },
+    "LambdaENIPermission": {
+        "Type" : "AWS::Lambda::Permission",
+        "Properties" : {
+            "Action" : "lambda:InvokeFunction",
+            "FunctionName" : {"Fn::GetAtt" : ["AddENILambda", "Arn"]},
+            "Principal" : "sns.amazonaws.com",
+            "SourceArn" : {"Ref" : "LambdaENISNSTopic"}
+        },
+        "DependsOn": [ "AddENILambda", "LambdaENISNSTopic" ]
+    },
+    "ASGNotifierRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "autoscaling.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/"
+      }
+    },
+    "ASGNotifierRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "ASGNotifierRolePolicy" ] ] },
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": "sns:Publish",
+            "Resource": { "Ref" : "LambdaENISNSTopic" }
+          } ]
+        },
+        "Roles": [ { "Ref": "ASGNotifierRole" } ]
+      },
+      "DependsOn": [ "ASGNotifierRole", "LambdaENISNSTopic" ]
+    },
+    "InitLambda" : {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+            "Handler": "init.lambda_handler",
+            "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+            "Code": {
+                "S3Bucket": { "Fn::If" : [ "PANWCode", { "Fn::Join": [ "-", [ "panw-aws", { "Ref": "AWS::Region" }]]}, { "Ref" : "PanS3BucketTpl" }] },
+                "S3Key": { "Fn::If" : [ "PANWCode", { "Fn::FindInMap" : [ "VersionMap", "Version", "Key" ] }, 
+					{ "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] }] }
+            },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      },
+      "DependsOn": [ "LambdaExecutionRole" ]
+    },
+    "LambdaCustomResource": {
+        "Type": "AWS::CloudFormation::CustomResource",
+        "Version" : "1.0",
+        "DependsOn": [ "AddENILambda", "InitLambda", "TrustSecurityGroup",  "UntrustSecurityGroup", "MgmtSecurityGroup", "VPCSecurityGroup"],
+         "Properties" : {
+             "ServiceToken": { "Fn::GetAtt" : ["InitLambda", "Arn"] },
+             "StackName": {"Ref": "AWS::StackName"},
+             "Region": {"Ref": "AWS::Region"},
+             "VPCID": {"Ref": "VPCID"},
+             "SubnetIDMgmt": {"Ref": "AZSubnetIDMgmt"},
+             "SubnetIDUntrust": {"Ref": "AZSubnetIDUntrust"},
+             "SubnetIDTrust": {"Ref": "AZSubnetIDTrust"},
+             "MgmtSecurityGroup": {"Ref": "MgmtSecurityGroup"},
+             "UntrustSecurityGroup": {"Ref": "UntrustSecurityGroup"},
+             "TrustSecurityGroup": {"Ref": "TrustSecurityGroup"},
+             "VPCSecurityGroup": {"Ref": "VPCSecurityGroup"},
+	     "KeyName" : {"Ref": "KeyName"},
+	     "ELBName" : {"Ref": "ELBName"},
+	     "ILBName" : {"Ref": "ILBName"},
+	     "FWInstanceType" : {"Ref": "FWInstanceType"},
+	     "SSHLocation" : {"Ref": "SSHLocation"},
+	     "MaximumInstancesASG" : {"Ref": "MaximumInstancesASG"},
+	     "ScaleUpThreshold" : {"Ref": "ScaleUpThreshold"},
+	     "ScaleDownThreshold" : {"Ref": "ScaleDownThreshold"},
+	     "ScalingParameter" : {"Ref": "ScalingParameter"},
+	     "ScalingPeriod" : {"Ref": "ScalingPeriod"},
+	     "ImageID" : { "Ref": "PanFwAmiId" },
+             "LambdaENISNSTopic": {"Ref": "LambdaENISNSTopic"},
+             "MinInstancesASG": {"Ref": "MinInstancesASG"},
+             "FirewallBootstrapRole": {"Ref": "FirewallBootstrapInstanceProfile"},
+             "LambdaExecutionRole": {"Ref": "LambdaExecutionRole"},
+             "ASGNotifierRole": { "Fn::GetAtt": [ "ASGNotifierRole", "Arn" ] },
+             "ASGNotifierRolePolicy": {"Ref": "ASGNotifierRolePolicy"},
+	     "MasterS3Bucket" : { "Ref" : "MasterS3Bucket" },
+	     "PanS3BucketTpl" : { "Ref" : "PanS3BucketTpl" },
+	     "PanS3KeyTpl" : { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] },
+	     "KeyPANWFirewall" : { "Ref" : "KeyPANWFirewall" },
+	     "KeyPANWPanorama" : { "Ref" : "KeyPANWPanorama" },
+	     "NATGateway" : { "Ref" : "NATGateway" },
+             "SubnetIDNATGW": {"Ref": "AZSubnetIDNATGW"},
+             "SubnetIDLambda": {"Ref": "AZSubnetIDLambda"},
+             "AddENILambda": {"Ref": "AddENILambda"},
+             "InitLambda": {"Ref": "InitLambda"},
+             "Version" : { "Fn::FindInMap" : [ "VersionMap", "Version", "Key" ] },
+         "KeyDeLicense": { "Ref": "KeyDeLicense" },
+         "LambdaENIQueue" : { "Ref": "LambdaENIQueue" }
+         }
+    }
+  },
+  "Outputs" : {
+    "ScalingParameter": {
+      "Value": { "Ref": "ScalingParameter" },
+      "Description": "Scaling Parameter you have selected"
+   },
+   "ELBName": {
+      "Value": { "Ref": "ELBName" },
+      "Description": "Elastic Load Balancer (Public)"
+   },
+   "ILBName": {
+      "Value": { "Ref": "ILBName" },
+      "Description": "Internal Load Balancer (Private)"
+   },
+   "KeyName": {
+      "Value": { "Ref": "KeyName" },
+      "Description": "Key Pair you have selected for SSH"
+   },
+   "SSHLocation": {
+      "Value": { "Ref": "SSHLocation" },
+      "Description": "Make sure you SSH from this IP address"
+   },
+   "BootstrapS3Bucket": {
+      "Value": { "Ref": "MasterS3Bucket" },
+      "Description": "Your Bootstrap bucket being used for this deployment"
+   },
+   "PanS3BucketTpl": {
+      "Value": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWCode", { "Fn::Join": [ "-", [ "panw-aws", { "Ref": "AWS::Region" }]]}, { "Ref" : "PanS3BucketTpl" }] }] ] },
+      "Description": "Your Template/Lambda Code bucket being used for this deployment"
+   },
+   "LambdaCodeVersion": {
+      "Value": { "Fn::FindInMap" : [ "VersionMap", "Version", "Key" ] },
+      "Description": "Version of the Lambda Code being run"
+   }
+  }
+}
