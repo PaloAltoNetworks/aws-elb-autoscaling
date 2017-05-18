@@ -1,4 +1,4 @@
-#Auto Scaling VM-Series Firewalls on AWS  
+# Auto Scaling VM-Series Firewalls on AWS  
 
 This CloudFormation Template deploys a tier of [VM-Series firewalls on AWS](https://aws.amazon.com/marketplace/seller-profile?id=0ed48363-5064-4d47-b41b-a53f7c937314) that integrates with AWS Auto Scaling and Elastic Load Balancing (ELB) using a combination of AWS services (AWS Lambda, Amazon CloudWatch, S3, SNS) and PAN-OS/VM-Series automation features (API, bootstrapping). The template allows you to leverage AWS scalability features designed to manage sudden surges in demand for application workload resources by simultaneously scaling the VM-Series firewalls with changing workloads. 
 
