@@ -17,6 +17,14 @@ For assistance during the beta, please post your questions either to this GitHub
  
 Only projects explicitly tagged with "Supported" information are officially supported. Unless explicitly tagged, all projects or work posted in our GitHub repository or sites other than our official Downloads page are provided under the best effort policy. The Network ELB template is released under the community supported policy.
 
+**Application Templates**
+
+Per the above diagram you can also test drive launching the NLB Network Load Balancer with application servers. The application template deployment will communicate with the front end firewall.template deployment to demonstrate the full capabilities of Autoscale 2.0. You can find the application templates on the following GitHub repository: https://github.com/PaloAltoNetworks/pan_nlb_v1
+
+For instructions on how to launch the application template please follow the [Auto Scaling Template for AWS Documentation.](https://github.com/PaloAltoNetworks/aws-elb-autoscaling/blob/master/Version-2.0/Auto%20Scaling%20Template%20for%20AWS%20(Version%202.0).pdf)   The application templates are also **Community Supported.**
+
+
+
 **Documentation**  
 * Release Notes: Included in this repository.
 * Technical Documentation: Included in this repository
