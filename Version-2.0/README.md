@@ -23,4 +23,4 @@ Only projects explicitly tagged with "Supported" information are officially supp
 * Release Notes: Included in this repository.
 * Technical Documentation: [VM-Series 8.0 Deployment Guide](https://www.paloaltonetworks.com/documentation/80/virtualization/virtualization/set-up-the-vm-series-firewall-on-aws/auto-scale-vm-series-firewalls-with-the-amazon-elb)  
 * [Lightboard](https://www.youtube.com/watch?v=xiPZHzdNRmI&feature=youtu.be)
-* About the [VM-Series Firewall for AWS](aws.paloaltonetworks.com).
+* About the [VM-Series Firewall for AWS](https://aws.paloaltonetworks.com).
