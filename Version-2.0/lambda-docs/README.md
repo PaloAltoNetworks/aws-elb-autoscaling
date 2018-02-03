@@ -1,1 +1,0 @@
-This folder is used only for generating the read-the-docs lambda documentation located at: http://paloaltonetworks-aws-autoscale-2-0.readthedocs.io/en/latest/.  Per the admin guide, please use the panw-aws.zip file in your S3 bucket when copying over the lambda functions - do not copy the individual lambda functions from this folder to your S3 bucket.
