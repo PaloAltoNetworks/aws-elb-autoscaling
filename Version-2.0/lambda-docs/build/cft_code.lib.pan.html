@@ -1,0 +1,2213 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cft_code.lib.pan package &mdash; Palo Alto Networks AWS Autoscale 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Palo Alto Networks AWS Autoscale 2.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Palo Alto Networks AWS Autoscale
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Palo Alto Networks Lambda Functions for ELB AutoScale Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arch.html">Architecture of the Palo Alto CFT Lambda Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Palo Alto Networks AWS Autoscale</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>cft_code.lib.pan package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cft_code.lib.pan.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cft-code-lib-pan-package">
+<h1>cft_code.lib.pan package<a class="headerlink" href="#cft-code-lib-pan-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-cft_code.lib.pan.asglib">
+<span id="cft-code-lib-pan-asglib-module"></span><h2>cft_code.lib.pan.asglib module<a class="headerlink" href="#module-cft_code.lib.pan.asglib" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>/<strong>*************************************************************************</strong></dt>
+<dd><ul class="first simple">
+<li>Copyright (c) 2016, Palo Alto Networks. All rights reserved.              *</li>
+<li><ul class="first">
+<li></li>
+</ul>
+</li>
+<li>This Software is the property of Palo Alto Networks. The Software and all *</li>
+<li>accompanying documentation are copyrighted.                               *</li>
+</ul>
+<p class="last"><strong>*************************************************************************</strong>/</p>
+</dd>
+</dl>
+<p>Copyright 2016 Palo Alto Networks</p>
+<p>Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+<blockquote>
+<div><a class="reference external" href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></div></blockquote>
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.choose_subnet">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">choose_subnet</code><span class="sig-paren">(</span><em>subnet</em>, <em>AvailabilityZone</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.choose_subnet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to identify the subnet id based upon the
+availability zone.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>subnet</strong> – </li>
+<li><strong>AvailabilityZone</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.common_alarm_func_del">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">common_alarm_func_del</code><span class="sig-paren">(</span><em>alarmname</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.common_alarm_func_del" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>alarmname</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.config_firewall_add_nat_rule">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">config_firewall_add_nat_rule</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em>, <em>untrust_ip</em>, <em>nlb_port</em>, <em>nlb_ip</em>, <em>static_route</em>, <em>default_gw</em>, <em>commit</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.config_firewall_add_nat_rule" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+<li><strong>untrust_ip</strong> – </li>
+<li><strong>nlb_port</strong> – </li>
+<li><strong>nlb_ip</strong> – </li>
+<li><strong>static_route</strong> – </li>
+<li><strong>default_gw</strong> – </li>
+<li><strong>commit</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.config_firewall_commit">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">config_firewall_commit</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.config_firewall_commit" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.config_firewall_delete_nat_rule">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">config_firewall_delete_nat_rule</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em>, <em>nlb_port</em>, <em>static_route</em>, <em>commit</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.config_firewall_delete_nat_rule" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+<li><strong>nlb_port</strong> – </li>
+<li><strong>static_route</strong> – </li>
+<li><strong>commit</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.config_firewall_init_setting">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">config_firewall_init_setting</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em>, <em>asg_name</em>, <em>untrust_ip</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.config_firewall_init_setting" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+<li><strong>asg_name</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.create_firewall_table">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">create_firewall_table</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.create_firewall_table" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.create_nlb_table">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">create_nlb_table</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.create_nlb_table" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.deactivate_fw_license">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">deactivate_fw_license</code><span class="sig-paren">(</span><em>gcontext</em>, <em>instanceId</em>, <em>gwMgmtIp</em>, <em>fwApiKey</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.deactivate_fw_license" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the FW to deactivate the license from the licensing
+server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – ssl context</li>
+<li><strong>instanceId</strong> – instance Id</li>
+<li><strong>gwMgmtIP</strong> – The IP address of the FW</li>
+<li><strong>fwApiKey</strong> – Api key of the FW</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Api call status</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.delete_asg_stack">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">delete_asg_stack</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>bsS3Bucket</em>, <em>ScalingParameter</em>, <em>keyPanoramam</em>, <em>force</em>, <em>subnet_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.delete_asg_stack" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+<li><strong>bsS3Bucket</strong> – </li>
+<li><strong>ScalingParameter</strong> – </li>
+<li><strong>KeyPANWPanorama</strong> – </li>
+<li><strong>force</strong> – </li>
+<li><strong>subnet_ids</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.delete_asg_stacks">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">delete_asg_stacks</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>vpc_sg</em>, <em>bsS3Bucket</em>, <em>ScalingParameter</em>, <em>KeyPANWPanorama</em>, <em>subnet_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.delete_asg_stacks" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+<li><strong>vpc_sg</strong> – </li>
+<li><strong>bsS3Bucket</strong> – </li>
+<li><strong>ScalingParameter</strong> – </li>
+<li><strong>KeyPANWPanorama</strong> – </li>
+<li><strong>subnet_ids</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.delete_eni_lambda">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">delete_eni_lambda</code><span class="sig-paren">(</span><em>vpc_sg</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.delete_eni_lambda" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vpc_sg</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.delete_message_from_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">delete_message_from_queue</code><span class="sig-paren">(</span><em>queue_url</em>, <em>receipt_handle</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.delete_message_from_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a message from the SQS queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – The URL of the queue</li>
+<li><strong>receipt_handle</strong> – The receipt handle of the message</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.delete_table">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">delete_table</code><span class="sig-paren">(</span><em>tablename</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.delete_table" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tablename</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.execute_api_request">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">execute_api_request</code><span class="sig-paren">(</span><em>gwMgmtIp</em>, <em>port</em>, <em>cmd</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.execute_api_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute API requests against the FW.
+:param gwMgmtIp:
+:param port:
+:param cmd:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_add_instance">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_add_instance</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>avail_zone</em>, <em>instance_id</em>, <em>state</em>, <em>term_state</em>, <em>asg_name</em>, <em>ip</em>, <em>pip</em>, <em>untrust_ip</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_add_instance" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>avail_zone</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+<li><strong>state</strong> – </li>
+<li><strong>term_state</strong> – </li>
+<li><strong>asg_name</strong> – </li>
+<li><strong>ip</strong> – </li>
+<li><strong>pip</strong> – </li>
+<li><strong>untrust_ip</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_delete_instance">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_delete_instance</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>instance_id</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_delete_instance" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_delete_instance1">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_delete_instance1</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>instance_id</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_delete_instance1" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_get_all_in_az_state">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_get_all_in_az_state</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>state</em>, <em>avail_zone</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_get_all_in_az_state" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>state</strong> – </li>
+<li><strong>avail_zone</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_get_all_in_state">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_get_all_in_state</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_get_all_in_state" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>state</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_get_from_db">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_get_from_db</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>instance_id</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_get_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_update_rule_mask">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_update_rule_mask</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>instance_id</em>, <em>rule_mask</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_update_rule_mask" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+<li><strong>rule_mask</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.firewall_table_update_state">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">firewall_table_update_state</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>instance_id</em>, <em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.firewall_table_update_state" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>instance_id</strong> – </li>
+<li><strong>state</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.fix_subnets">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">fix_subnets</code><span class="sig-paren">(</span><em>data1</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.fix_subnets" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data1</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.fix_unicode">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">fix_unicode</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.fix_unicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to convert opaque data from unicode to utf-8
+:param data: Opaque data
+:return: utf-8 encoded data</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getASGTag">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getASGTag</code><span class="sig-paren">(</span><em>rid</em>, <em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getASGTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tags on a specified auto scale group.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is important from the perspective
+that it allows the lambda function code to
+distinguish <code class="docutils literal"><span class="pre">`PAN-FW`</span></code> deployed ASG’s from
+other ASG’s that might already exist in the
+customer VPC.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rid</strong> – The name of the ASG</li>
+<li><strong>key</strong> – The tag to retrieve</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None or str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getAccountId">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getAccountId</code><span class="sig-paren">(</span><em>rid</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getAccountId" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rid</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getAzs">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getAzs</code><span class="sig-paren">(</span><em>subnet_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getAzs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>subnet_ids</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getChassisReady">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getChassisReady</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getChassisReady" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getDebugLevel">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getDebugLevel</code><span class="sig-paren">(</span><em>stackname</em>, <em>region</em>, <em>account</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getDebugLevel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>account</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getDebugLevelFromMsg">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getDebugLevelFromMsg</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getDebugLevelFromMsg" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getJobProgress">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getJobProgress</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getJobProgress" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getJobResult">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getJobResult</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getJobResult" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getJobStatus">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getJobStatus</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getJobStatus" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getJobTfin">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getJobTfin</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getJobTfin" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getRegion">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getRegion</code><span class="sig-paren">(</span><em>rid</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getRegion" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rid</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getScalingValue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getScalingValue</code><span class="sig-paren">(</span><em>msg</em>, <em>ScalingParameter</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getScalingValue" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> – </li>
+<li><strong>ScalingParameter</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getSqs">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getSqs</code><span class="sig-paren">(</span><em>stackname</em>, <em>region</em>, <em>account</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getSqs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>account</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getSqsMessages">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getSqsMessages</code><span class="sig-paren">(</span><em>stackname</em>, <em>account</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getSqsMessages" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>account</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.getUntrustIP">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">getUntrustIP</code><span class="sig-paren">(</span><em>instanceid</em>, <em>untrust</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.getUntrustIP" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instanceid</strong> – </li>
+<li><strong>untrust</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_asg_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_asg_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>az</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_asg_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct asg name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stackname</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>:param :elbtg
+:param az:
+:return: asg name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_cw_name_space">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_cw_name_space</code><span class="sig-paren">(</span><em>stackname</em>, <em>asg_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_cw_name_space" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>asg_name</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_device_serial_no">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_device_serial_no</code><span class="sig-paren">(</span><em>gcontext</em>, <em>instanceId</em>, <em>gwMgmtIp</em>, <em>fwApiKey</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_device_serial_no" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the serial number from the FW.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – ssl context</li>
+<li><strong>instanceId</strong> – instance Id</li>
+<li><strong>gwMgmtIP</strong> – The IP address of the FW</li>
+<li><strong>fwApiKey</strong> – Api key of the FW</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The serial number of the FW</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_event_rule_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_event_rule_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>instanceId</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_event_rule_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the name of the event rule.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>instanceId</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_firewall_table_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_firewall_table_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_firewall_table_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>region</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_from_nlb_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_from_nlb_queue</code><span class="sig-paren">(</span><em>queue_url</em>, <em>visiblity_timeout=10</em>, <em>waittimes_seconds=0</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_from_nlb_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a message from nlb queue</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – </li>
+<li><strong>visiblity_timeout</strong> – </li>
+<li><strong>waittimes_seconds</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">msg or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_from_sqs_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_from_sqs_queue</code><span class="sig-paren">(</span><em>queue_url</em>, <em>visiblity_timeout=10</em>, <em>waittimes_seconds=5</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_from_sqs_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve data from a queue</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – URL of the queue</li>
+<li><strong>visiblity_timeout</strong> – The duration during which the message will not
+be available to other consumers</li>
+<li><strong>waittimes_seconds</strong> – Wait timeout</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_lambda_cloud_watch_func_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_lambda_cloud_watch_func_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>asg_name</em>, <em>instanceId</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_lambda_cloud_watch_func_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the name of the cloud watch metrics as a function
+of the ASG name and the instance id.
+:param stackname:
+:param asg_name:
+:param instanceId:
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_lambda_statement_id">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_lambda_statement_id</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_lambda_statement_id" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_lc_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_lc_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>az</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_lc_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+<li><strong>az</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_nlb_table_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_nlb_table_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_nlb_table_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>region</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_panorama_version">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_panorama_version</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>apiKey</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_panorama_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the software version of Panorama.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – ssl context</li>
+<li><strong>gwMgmtIP</strong> – The IP address of the FW</li>
+<li><strong>apiKey</strong> – Api key of the Panorama</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The software version of the Panorama</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_s3_bucket_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_s3_bucket_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>ilbtag</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_s3_bucket_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>ilbtag</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_s3_bucket_name1">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_s3_bucket_name1</code><span class="sig-paren">(</span><em>stackname</em>, <em>ilbtag</em>, <em>ip_address</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_s3_bucket_name1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_sched_func_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_sched_func_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_sched_func_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_ssl_context">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_ssl_context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_ssl_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create default ssl context</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_statement_id">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_statement_id</code><span class="sig-paren">(</span><em>stackname</em>, <em>instanceId</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_statement_id" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>instanceId</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_subnet_and_gw">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_subnet_and_gw</code><span class="sig-paren">(</span><em>ip_cidr</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_subnet_and_gw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract subnet and gateway from subnet cidr in AWS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ip_cidr</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_target_id_name">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_target_id_name</code><span class="sig-paren">(</span><em>stackname</em>, <em>instanceId</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_target_id_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>instanceId</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.get_values_from_init_cfg">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">get_values_from_init_cfg</code><span class="sig-paren">(</span><em>contents</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.get_values_from_init_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the keys from the init-cfg file
+:param contents:
+:return: dict</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.int2ip">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">int2ip</code><span class="sig-paren">(</span><em>addr</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.int2ip" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>addr</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.ip2int">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">ip2int</code><span class="sig-paren">(</span><em>addr</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.ip2int" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>addr</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.is_firewall_auto_commit_done">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">is_firewall_auto_commit_done</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.is_firewall_auto_commit_done" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.is_firewall_ready">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">is_firewall_ready</code><span class="sig-paren">(</span><em>gcontext</em>, <em>gwMgmtIp</em>, <em>api_key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.is_firewall_ready" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_add_entry">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_add_entry</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>nlb_ip</em>, <em>port</em>, <em>nlb_state</em>, <em>nlb_zone_name</em>, <em>nlb_subnet_id</em>, <em>total_avail_zones</em>, <em>avail_zone_index</em>, <em>dns_name</em>, <em>nlb_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_add_entry" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>nlb_ip</strong> – </li>
+<li><strong>port</strong> – </li>
+<li><strong>nlb_state</strong> – </li>
+<li><strong>nlb_zone_name</strong> – </li>
+<li><strong>nlb_subnet_id</strong> – </li>
+<li><strong>total_avail_zones</strong> – </li>
+<li><strong>avail_zone_index</strong> – </li>
+<li><strong>dns_name</strong> – </li>
+<li><strong>nlb_name</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_delete_entry">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_delete_entry</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>nlb_ip</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_delete_entry" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>nlb_ip</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_delete_entry_by_dnsname">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_delete_entry_by_dnsname</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>dns_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_delete_entry_by_dnsname" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>dns_name</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_get_all_in_state">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_get_all_in_state</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_get_all_in_state" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>state</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_get_entry_by_dnsname">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_get_entry_by_dnsname</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>dns_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_get_entry_by_dnsname" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>dns_name</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_get_from_db">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_get_from_db</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>nlb_ip</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_get_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>nlb_ip</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_get_next_avail_port">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_get_next_avail_port</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_get_next_avail_port" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.nlb_table_update_state">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">nlb_table_update_state</code><span class="sig-paren">(</span><em>stack_name</em>, <em>region</em>, <em>nlb_ip</em>, <em>nlb_state</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.nlb_table_update_state" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stack_name</strong> – </li>
+<li><strong>region</strong> – </li>
+<li><strong>nlb_ip</strong> – </li>
+<li><strong>nlb_state</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.pan_print">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">pan_print</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.pan_print" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.panorama_delete_stack">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">panorama_delete_stack</code><span class="sig-paren">(</span><em>bsS3Bucket</em>, <em>asg_name</em>, <em>keyPanoramam</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.panorama_delete_stack" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bsS3Bucket</strong> – </li>
+<li><strong>asg_name</strong> – </li>
+<li><strong>keyPanoramam</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.panorama_remove_serial_and_ip">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">panorama_remove_serial_and_ip</code><span class="sig-paren">(</span><em>stackname</em>, <em>r</em>, <em>pdict</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.panorama_remove_serial_and_ip" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>r</strong> – </li>
+<li><strong>pdict</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.panorama_save_serial_and_ip">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">panorama_save_serial_and_ip</code><span class="sig-paren">(</span><em>stackname</em>, <em>r</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.panorama_save_serial_and_ip" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>r</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.purge_stack_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">purge_stack_queue</code><span class="sig-paren">(</span><em>queue_url</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.purge_stack_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete all the messages in the queue</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>queue_url</strong> – URL of the queue</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.random_string">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">random_string</code><span class="sig-paren">(</span><em>string_length=10</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.random_string" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string_length</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.read_s3_object">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">read_s3_object</code><span class="sig-paren">(</span><em>bucket</em>, <em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.read_s3_object" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bucket</strong> – </li>
+<li><strong>key</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.release_eip">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">release_eip</code><span class="sig-paren">(</span><em>stackname</em>, <em>instanceId</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.release_eip" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>instanceId</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_alarm">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_alarm</code><span class="sig-paren">(</span><em>asg_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_alarm" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>asg_name</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_asg">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_asg</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>az</em>, <em>ScalingParameter</em>, <em>KeyPANWPanorama</em>, <em>force</em>, <em>delete_stack</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_asg" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>elbtg</strong> – </li>
+<li><strong>az</strong> – </li>
+<li><strong>ScalingParameter</strong> – </li>
+<li><strong>KeyPANWPanorama</strong> – </li>
+<li><strong>force</strong> – </li>
+<li><strong>delete_stack</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_asg_life_cycle">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_asg_life_cycle</code><span class="sig-paren">(</span><em>asg_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_asg_life_cycle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>asg_name</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_asg_vms">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_asg_vms</code><span class="sig-paren">(</span><em>stackname</em>, <em>asg_grp_name</em>, <em>KeyPANWPanorama</em>, <em>delete_stack</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_asg_vms" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stackname</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>:param :asg_grp_name:
+:param :KeyPANWPanorama:
+:param :delete_stack:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_device">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_device</code><span class="sig-paren">(</span><em>stackname</em>, <em>remove</em>, <em>PanoramaIP</em>, <em>api_key</em>, <em>dev_group</em>, <em>tp_group</em>, <em>serial_no</em>, <em>gwMgmtIp</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to remove a device from Panorama.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stackname</strong> – </li>
+<li><strong>remove</strong> – </li>
+<li><strong>PanoramaIP</strong> – </li>
+<li><strong>api_key</strong> – </li>
+<li><strong>dev_group</strong> – </li>
+<li><strong>tp_group</strong> – </li>
+<li><strong>serial_no</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None or str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_fw_from_panorama">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_fw_from_panorama</code><span class="sig-paren">(</span><em>instanceId</em>, <em>KeyPANWPanorama</em>, <em>gwMgmtIp</em>, <em>PanoramaIP</em>, <em>PanoramaDG</em>, <em>PanoramaTPL</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_fw_from_panorama" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instanceId</strong> – </li>
+<li><strong>KeyPANWPanorama</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>PanoramaIP</strong> – </li>
+<li><strong>PanoramaDG</strong> – </li>
+<li><strong>PanoramaTPL</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.remove_s3_bucket">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">remove_s3_bucket</code><span class="sig-paren">(</span><em>s3_bucket_name</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.remove_s3_bucket" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s3_bucket_name</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.retrieve_fw_ip">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">retrieve_fw_ip</code><span class="sig-paren">(</span><em>instance_id</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.retrieve_fw_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the IP of the Instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>instance_id</strong> (<em>str</em>) – The id of the instance</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.runCommand">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">runCommand</code><span class="sig-paren">(</span><em>gcontext</em>, <em>cmd</em>, <em>gwMgmtIp</em>, <em>api_key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.runCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to run generic API commands against a PAN Firewall.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is a generic method to interact with PAN
+firewalls to execute api calls.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – SSL Context</li>
+<li><strong>cmd</strong> – Command to execute</li>
+<li><strong>gwMgmtIp</strong> – Management IP of the PAN FW</li>
+<li><strong>api_key</strong> – API key of the Firewall</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None or str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.runShutdownCommand">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">runShutdownCommand</code><span class="sig-paren">(</span><em>gcontext</em>, <em>cmd</em>, <em>gwMgmtIp</em>, <em>api_key</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.runShutdownCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to shutdown a device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – </li>
+<li><strong>cmd</strong> – </li>
+<li><strong>gwMgmtIp</strong> – </li>
+<li><strong>api_key</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.scalein_asg">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">scalein_asg</code><span class="sig-paren">(</span><em>stackname</em>, <em>elbtg</em>, <em>az</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.scalein_asg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.send_command">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">send_command</code><span class="sig-paren">(</span><em>conn</em>, <em>req_url</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.send_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>An alternative interface to interact with the PAN FW’s</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>conn</strong> – </li>
+<li><strong>req_url</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.send_message_to_nlb_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">send_message_to_nlb_queue</code><span class="sig-paren">(</span><em>queue_url</em>, <em>str_message</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.send_message_to_nlb_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a message on the Network Load Balancer queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – The URL of the queue</li>
+<li><strong>str_message</strong> – Message to send to the queue</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.send_message_to_queue">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">send_message_to_queue</code><span class="sig-paren">(</span><em>queue_url</em>, <em>str_message</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.send_message_to_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a message on the specified queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – The URL of the queue</li>
+<li><strong>str_message</strong> – Message to send to the queue</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.setASGTag">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">setASGTag</code><span class="sig-paren">(</span><em>rid</em>, <em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.setASGTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="docutils literal"><span class="pre">`PAN-FW`</span></code> specific tags on an ASG.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is important from the perspective
+that it allows the lambda function code to
+distinguish <code class="docutils literal"><span class="pre">`PAN-FW`</span></code> deployed ASG’s from
+other ASG’s that might already exist in the
+customer VPC.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rid</strong> – Name of the ASG</li>
+<li><strong>key</strong> – Tag</li>
+<li><strong>value</strong> – Tag Value</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.setDebugLevelFromMsg">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">setDebugLevelFromMsg</code><span class="sig-paren">(</span><em>logger</em>, <em>lvl</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.setDebugLevelFromMsg" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>logger</strong> – </li>
+<li><strong>lvl</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.setLoggerLevel">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">setLoggerLevel</code><span class="sig-paren">(</span><em>logger</em>, <em>stackname</em>, <em>account</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.setLoggerLevel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>logger</strong> – </li>
+<li><strong>stackname</strong> – </li>
+<li><strong>account</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.set_deactivate_api_key">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">set_deactivate_api_key</code><span class="sig-paren">(</span><em>gcontext</em>, <em>instanceId</em>, <em>gwMgmtIp</em>, <em>fwApiKey</em>, <em>deactivateApiKey</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.set_deactivate_api_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the deactivate api key to allow the FW deactivate sequence
+:param instanceId:
+:param gwMgmtIp:
+:param fwApiKey:
+:param deactivateApiKey:
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.set_queue_attributes">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">set_queue_attributes</code><span class="sig-paren">(</span><em>queue_url</em>, <em>retention_period</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.set_queue_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the queue attributes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>queue_url</strong> – URL of the queue</li>
+<li><strong>retention_period</strong> – Duration of time that the message
+will be retained for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.shutdown_fw_device">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">shutdown_fw_device</code><span class="sig-paren">(</span><em>gcontext</em>, <em>instanceId</em>, <em>gwMgmtIp</em>, <em>fwApiKey</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.shutdown_fw_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown the firewall device</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gcontext</strong> – ssl context</li>
+<li><strong>instanceId</strong> – instance Id</li>
+<li><strong>gwMgmtIP</strong> – The IP address of the FW</li>
+<li><strong>fwApiKey</strong> – Api key of the FW</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Api call status</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cft_code.lib.pan.asglib.substring_after">
+<code class="descclassname">cft_code.lib.pan.asglib.</code><code class="descname">substring_after</code><span class="sig-paren">(</span><em>s</em>, <em>delim</em><span class="sig-paren">)</span><a class="headerlink" href="#cft_code.lib.pan.asglib.substring_after" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> – </li>
+<li><strong>delim</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cft_code.lib.pan">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cft_code.lib.pan" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Palo Alto Networks.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
