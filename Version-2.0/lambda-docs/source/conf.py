@@ -21,10 +21,10 @@ import sys
 import mock
 import sphinx_rtd_theme
 
-sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('../../cft_code'))
-sys.path.insert(0, os.path.abspath('../../cft_code/dnslib'))
-sys.path.insert(0, os.path.abspath('../../cft_code/lib'))
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../cft_code'))
+sys.path.insert(0, os.path.abspath('../cft_code/dnslib'))
+sys.path.insert(0, os.path.abspath('../cft_code/lib'))
 
 MOCK_MODULES = ['boto3', 'botocore']
 for mod_name in MOCK_MODULES:
