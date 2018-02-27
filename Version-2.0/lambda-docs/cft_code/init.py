@@ -75,11 +75,24 @@ valid_panfw_productcode_ids = {
 
 
 def random_string(string_length=10):
+    """
+
+    :param string_length:
+    :return:
+    """
     random = str(uuid.uuid4()) 
     random = random.replace("-","") 
     return random[0:string_length]
 
 def send_response(event, context, responseStatus):
+    """
+    Method to send a response back to the CFT process.
+
+    :param event:
+    :param context:
+    :param responseStatus:
+    :return:
+    """
     r=responseStatus.split(":")
     print(r)
     rs=str(r[0])
@@ -124,14 +137,33 @@ def send_response(event, context, responseStatus):
         return 'true'
 
 def get_event_rule_name(stackname):
+    """
+    Method to create a unique name for the
+    event rules.
+
+    .. note:: The event name is constructed by appending
+              a fixed string to the stack name.
+    :param stackname:
+    :return:
+    """
     name = stackname + 'event-rule-init-lambda'
     return name[-63:len(name)]
     
 def get_target_id_name(stackname):
+    """
+
+    :param stackname:
+    :return:
+    """
     name = stackname + 'target-id-init-lambda'
     return name[-63:len(name)]
 
 def no_asgs(elbname):
+    """
+
+    :param elbname:
+    :return:
+    """
     asg_response=asg.describe_auto_scaling_groups()
     found = False
     for i in asg_response['AutoScalingGroups']:
@@ -143,6 +175,17 @@ def no_asgs(elbname):
     return found
 
 def read_s3_object(bucket, key):
+    """
+    Method to read data from and S3 bucket.
+
+    .. note:: This method is used to read bootstrap
+              information, in order to license and
+              configure the firewall.
+
+    :param bucket:
+    :param key:
+    :return:
+    """
     # Get the object from the event and show its content type
     key = urllib.unquote_plus(key).decode('utf8')
     try:
@@ -157,6 +200,13 @@ def read_s3_object(bucket, key):
         return None
 
 def remove_sched_func(stackname, elbtg):
+    """
+    Remove the sched_evt function, in order to
+    cleanup when the CFT stack is deleted.
+
+    :param stackname:
+    :return:
+    """
     lambda_func_name= lib.get_sched_func_name(stackname, elbtg)
 
     event_rule_name= get_event_rule_name(stackname)
@@ -183,6 +233,13 @@ def remove_sched_func(stackname, elbtg):
     return False
 
 def delete_resources(event):
+    """
+    Method to handle the delete of resources when the
+    CFT stack is deleted.
+
+    :param event:
+    :return:
+    """
     logger.info('Deleteing resources...')
     stackname = event['ResourceProperties']['StackName']
     region=event['ResourceProperties']['Region']
@@ -209,6 +266,17 @@ def delete_resources(event):
     return
 
 def common_alarm_func_update(asg_name, metricname, namespace, arn_scalein, arn_scaleout, alarmname, desc):
+    """
+    Method to create alarms to be monitored on instances in an ASG
+    :param asg_name:
+    :param metricname:
+    :param namespace:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :param alarmname:
+    :param desc:
+    :return:
+    """
     d1=desc+ " High"
     a1=alarmname + '-high'
     try:
@@ -238,11 +306,27 @@ def common_alarm_func_update(asg_name, metricname, namespace, arn_scalein, arn_s
     return True
 
 def UpdateDataPlaneCPUUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     alarmname= asg_name + '-cw-cpu'
     return common_alarm_func_update(asg_name, "DataPlaneCPUUtilizationPct", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
                         alarmname, "DataPlane CPU Utilization (New)")
 
 def UpdateActiveSessions(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating Active Sessions CloudWatch alarm for ASG: ' + asg_name)
 
     alarmname= asg_name + '-cw-as'
@@ -250,6 +334,14 @@ def UpdateActiveSessions(stackname, asg_name, arn_scalein, arn_scaleout):
                         alarmname, "Active Sessions (New)")
 
 def UpdateSessionUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating Session Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-su'
     return common_alarm_func_update(asg_name, "panSessionUtilization", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -257,6 +349,14 @@ def UpdateSessionUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
     return
 
 def UpdateSessionSslProxyUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating Session SSL Proxy Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-sspu'
     return common_alarm_func_update(asg_name, "panSessionSslProxyUtilization", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -264,6 +364,14 @@ def UpdateSessionSslProxyUtilization(stackname, asg_name, arn_scalein, arn_scale
     return
 
 def UpdateGPGatewayUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating GP Gateway Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpu'
     return common_alarm_func_update(asg_name, "panGPGatewayUtilizationPct", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -271,6 +379,14 @@ def UpdateGPGatewayUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
     return
 
 def UpdateGPActiveTunnels(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating GP Active Tunnels CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpat'
     return common_alarm_func_update(asg_name, "panGPGWUtilizationActiveTunnels", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -278,6 +394,14 @@ def UpdateGPActiveTunnels(stackname, asg_name, arn_scalein, arn_scaleout):
     return
 
 def UpdateDataPlaneBufferUtilization(stackname, asg_name, arn_scalein, arn_scaleout):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :param arn_scalein:
+    :param arn_scaleout:
+    :return:
+    """
     logger.info('Creating DP Buffer Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-dpb'
     return common_alarm_func_update(asg_name, "DataPlanePacketBufferUtilization", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -295,6 +419,15 @@ cw_func_update_alarms = {  'DataPlaneCPUUtilizationPct': UpdateDataPlaneCPUUtili
 
 
 def update_alarm(stackname, asg_name, event):
+    """
+    Method to update alarm parameters if they have been changed
+    when the CFT stack was updated.
+
+    :param stackname:
+    :param asg_name:
+    :param event:
+    :return:
+    """
     global ScaleUpThreshold
     global ScaleDownThreshold
     global ScalingParameter
@@ -328,6 +461,12 @@ def update_alarm(stackname, asg_name, event):
     return True
 
 def update_resources(event):
+    """
+    Method to handle any updates to the CFT templates.
+
+    :param event: CFT input parameters
+    :return: None
+    """
     global asg_name
     global untrust
     global PanS3KeyTpl
@@ -355,7 +494,6 @@ def update_resources(event):
     logger.info(oldr)
 
     LambdaExecutionRole = r['LambdaExecutionRole']
-    stackname=r['StackName']
     LambdaS3Bucket=r['LambdaS3Bucket']
     PanS3KeyTpl=r['PanS3KeyTpl']
     KeyPANWFirewall=r['KeyPANWFirewall']
@@ -392,7 +530,7 @@ def update_resources(event):
     logger.info('Purging NLB queue: {}'.format(NetworkLoadBalancerQueue))
     lib.purge_stack_queue(NetworkLoadBalancerQueue)
 
-    if remove_sched_func(stackname) == False:
+    if remove_sched_func(stackname, ELBTargetGroupName) == False:
         logger.error('Failed to delete Sched Lambda Func (VIP Monitoring)')
         return 
     create_resources(event)
@@ -477,10 +615,11 @@ def update_resources(event):
 
 def validate_ami_id(event):
     """
-       Validate that the AMI-ID provided is a valid 
+       Validate that the AMI-ID provided is a valid
        PAN FW AMI.
+       :param event: The CFT event params
+       :return: bool
     """
-
     resource_props = event['ResourceProperties']
     ami_id = resource_props['ImageID']
     valid_ami = False
@@ -512,6 +651,15 @@ def validate_ami_id(event):
         return True 
 
 def create_resources(event):
+    """
+    This method is called from the lambda handler entry point.
+    The following actions are performed:
+        - validate the AMI-ID
+        - deploys the ```sched_evt1``` lambda function.
+
+    :param event:
+    :return: None
+    """
     stackname = event['ResourceProperties']['StackName']
     logger.info('Creating resources for stackname: ' + stackname)
 
@@ -525,7 +673,6 @@ def create_resources(event):
     ScaleDownThreshold = r['ScaleDownThreshold']
     MinInstancesASG = r['MinInstancesASG']
     MaximumInstancesASG = r['MaximumInstancesASG']
-    StackName = r['StackName']
     VpcId = r['VpcId']
     FWInstanceType = r['FWInstanceType']
     BootstrapS3Bucket = r['BootstrapS3Bucket']
@@ -566,7 +713,6 @@ def create_resources(event):
     SubnetIDNATGW=str(lib.fix_unicode(SubnetIDNATGW))
     SubnetIDNATGW=lib.fix_subnets(SubnetIDNATGW)
 
-    stackname = event['ResourceProperties']['StackName']
     logger.info('Creating Sched Lambda funcion (VIP Monitoring) for stackname: ' + stackname)
     r = event['ResourceProperties']
     lambda_exec_role_name=r['LambdaExecutionRole']
@@ -631,7 +777,7 @@ def create_resources(event):
     pdg=dict['dgname']
     ptpl=dict['tplname']
     Input = {'ScalingParameter': ScalingParameter, 'ScalingPeriod': ScalingPeriod,
-		'StackName': StackName, 'VpcId': VpcId,
+		'StackName': stackname, 'VpcId': VpcId,
 		'FWInstanceType': FWInstanceType, 'BootstrapS3Bucket': BootstrapS3Bucket,
 		'SubnetIDTrust': SubnetIDTrust, 'SubnetIDUntrust': SubnetIDUntrust,
 		'SubnetIDMgmt': SubnetIDMgmt, 'TrustSecurityGroup': TrustSecurityGroup,
@@ -659,7 +805,7 @@ def create_resources(event):
 
     stack_metadata= {
                 'SGM': MgmtSecurityGroup, 'SGU': UntrustSecurityGroup, 'SGT': TrustSecurityGroup, 'SGV': VPCSecurityGroup,
-                'IamLambda': LambdaExecutionRole, 'StackName': StackName, 'Region': Region, 'LambdaS3Bucket': LambdaS3Bucket,
+                'IamLambda': LambdaExecutionRole, 'StackName': stackname, 'Region': Region, 'LambdaS3Bucket': LambdaS3Bucket,
                 'PanS3KeyTpl': PanS3KeyTpl, 
                 'ScalingParameter': ScalingParameter, 
                 'SubnetIDNATGW': SubnetIDNATGW, 
@@ -684,6 +830,14 @@ def create_resources(event):
         )
 
 def get_sha(bucket, folder, lambda_sha):
+    """
+    Method to compute the SHA-256 encoding for the
+    contents of the given file
+    :param bucket:
+    :param folder:
+    :param lambda_sha:
+    :return:
+    """
     key=folder
     key = urllib.unquote_plus(key).decode('utf8')
     try:
@@ -707,6 +861,29 @@ def get_sha(bucket, folder, lambda_sha):
         logger.info(e)
 
 def lambda_handler(event, context):
+    """
+        .. note:: This function is the entry point for the ```init``` Lambda function.
+           This function performs the following actions:
+
+           - invokes ```create | delete | update_resources()``` based on the action
+                         required.
+           - creates the ```sched_evt1``` lambda function
+                        and configures the same.
+
+           - validates that the PAN FW AMI-ID specified as input
+                        is valid and supported.
+
+        :param event: Encodes all the input variables to the lambda function, when
+                      the function is invoked.
+                      Essentially AWS Lambda uses this parameter to pass in event
+                      data to the handler function.
+        :type event: dict
+
+        :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+        :type context: LambdaContext
+
+        :return: None
+    """
     global logger
 
     logger.info('got event{}'.format(event))

@@ -28,6 +28,14 @@ import base64
 import sys
 
 def code_sha(filename):
+    """
+    Method to compute the SHA-256 encoding
+    for the contents of the file specified by the
+    filename.
+
+    :param filename:
+    :return: str
+    """
     file=open(filename, 'rb')
     str=file.read()
     h=hashlib.sha256()

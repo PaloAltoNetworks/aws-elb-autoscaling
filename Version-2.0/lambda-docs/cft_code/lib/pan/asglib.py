@@ -68,12 +68,20 @@ dynamodb = boto3.resource('dynamodb')
 def purge_stack_queue(queue_url):
     """
     Delete all the messages in the queue
+
+    :param queue_url: URL of the queue
+    :return: None
     """
     sqs.purge_queue(QueueUrl=queue_url)
 
 def set_queue_attributes(queue_url, retention_period):
     """
-    Set the queue attributes 
+    Set the queue attributes
+
+    :param queue_url: URL of the queue
+    :param retention_period: Duration of time that the message
+                             will be retained for.
+    :return: None
     """
     try:         
         sqs.set_queue_attributes(QueueUrl=queue_url,
@@ -88,7 +96,13 @@ def set_queue_attributes(queue_url, retention_period):
 
 def get_from_sqs_queue(queue_url, visiblity_timeout=10, waittimes_seconds=5):
     """
-     Retrieve data from a queue 
+     Retrieve data from a queue
+
+     :param queue_url: URL of the queue
+     :param visiblity_timeout: The duration during which the message will not
+                               be available to other consumers
+     :param waittimes_seconds: Wait timeout
+     :return: None
     """
     stack_msg = None
     stack_attrs = None
@@ -126,8 +140,11 @@ def get_from_sqs_queue(queue_url, visiblity_timeout=10, waittimes_seconds=5):
 def send_message_to_queue(queue_url, str_message):
     """
     Send a message on the specified queue.
-    """
 
+    :param queue_url: The URL of the queue
+    :param str_message: Message to send to the queue
+    :return:  None
+    """
     logger.info("Sending message to queue: {}".format(str_message))
     ret_dict = sqs.send_message(
         QueueUrl=queue_url,
@@ -144,6 +161,10 @@ def send_message_to_queue(queue_url, str_message):
 def delete_message_from_queue(queue_url, receipt_handle):
     """
     Delete a message from the SQS queue.
+
+    :param queue_url: The URL of the queue
+    :param receipt_handle: The receipt handle of the message
+    :return: None
     """
     logger.info('Attempting to delete the message from the queue')
 
@@ -154,7 +175,12 @@ def delete_message_from_queue(queue_url, receipt_handle):
 
 def get_from_nlb_queue(queue_url, visiblity_timeout=10, waittimes_seconds=0):
     """
-     Retrieve data from network load balancer queue
+    Retrieve a message from nlb queue
+
+    :param queue_url:
+    :param visiblity_timeout:
+    :param waittimes_seconds:
+    :return: msg or None
     """
     nlb_msg = None
     nlb_attrs = None
@@ -189,7 +215,12 @@ def get_from_nlb_queue(queue_url, visiblity_timeout=10, waittimes_seconds=0):
 def send_message_to_nlb_queue(queue_url, str_message):
     """
     Send a message on the Network Load Balancer queue.
+
+    :param queue_url: The URL of the queue
+    :param str_message: Message to send to the queue
+    :return:  None
     """
+
 
     logger.info("Sending message to NLB queue: {}".format(str_message))
     ret_dict = sqs.send_message(
@@ -205,9 +236,20 @@ def send_message_to_nlb_queue(queue_url, str_message):
     logger.info("Response data from sending message to NLB queue: {}".format(ret_dict))
 
 def substring_after(s, delim):
+    """
+
+    :param s:
+    :param delim:
+    :return:
+    """
     return s.partition(delim)[2]
 
 def fix_unicode(data):
+    """
+        Method to convert opaque data from unicode to utf-8
+        :param data: Opaque data
+        :return: utf-8 encoded data
+    """
     if isinstance(data, unicode):
         return data.encode('utf-8')
     elif isinstance(data, dict):
@@ -219,6 +261,11 @@ def fix_unicode(data):
     return data
 
 def fix_subnets(data1):
+    """
+
+    :param data1:
+    :return:
+    """
     data=str(data1)
     data=data.replace("'", "")
     data=data.replace("[", "")
@@ -226,12 +273,28 @@ def fix_subnets(data1):
     return data
   
 def ip2int(addr):
+    """
+
+    :param addr:
+    :return:
+    """
     return struct.unpack("!I", socket.inet_aton(addr))[0]
 
 def int2ip(addr):
+    """
+
+    :param addr:
+    :return:
+    """
     return socket.inet_ntoa(struct.pack("!I", addr))
  
 def get_subnet_and_gw(ip_cidr):
+    """
+    Extract subnet and gateway from subnet cidr in AWS
+
+    :param ip_cidr:
+    :return:
+    """
     addr_mask = ip_cidr.split('/')
     addr = addr_mask[0]
     try:
@@ -255,8 +318,8 @@ def retrieve_fw_ip(instance_id):
     """
     Retrieve the IP of the Instance
 
-    @param instance_id The id of the instance
-    @type ```str```
+    :param instance_id: The id of the instance
+    :type instance_id: str
     """
 
     eni_response=ec2_client.describe_network_interfaces(Filters=[{'Name': "attachment.instance-id", 'Values': [instance_id]},
@@ -298,36 +361,87 @@ def retrieve_fw_ip(instance_id):
         return ip
  
 def get_asg_name(stackname, elbtg, az):
+    """
+    Construct asg name
+
+    :param stackname:
+    :param :elbtg
+    :param az:
+    :return: asg name
+    """
     name = stackname[:10] + '-' + elbtg + '_ASG_' + az
     return name[-63:len(name)]
 
 def get_sched_func_name(stackname, elbtg):
+    """
+
+    :param stackname:
+    :param elbtg:
+    :return:
+    """
     name= stackname[:10] + '-'+ elbtg + '-lambda-sched-event'
     return name[-63:len(name)]
 
 def get_lambda_statement_id(stackname, elbtg):
+    """
+
+    :param stackname:
+    :param elbtg:
+    :return:
+    """
     statementId = stackname[:10] + '-' + elbtg + '-lambda_add_perm'
     return statementId[-63:len(statementId)]
 
 def get_lc_name(stackname, elbtg, az):
+    """
+
+    :param stackname:
+    :param elbtg:
+    :param az:
+    :return:
+    """
     name = stackname[:10] + '-' + elbtg + '_ASG_LC_' + az
     return name[-63:len(name)]
 
 def get_cw_name_space(stackname, asg_name):
+    """
+
+    :param stackname:
+    :param asg_name:
+    :return:
+    """
     name = asg_name
     return name[-63:len(name)]
 
 def get_s3_bucket_name(stackname, ilbtag):
+    """
+    
+    :param stackname:
+    :param ilbtag:
+    :return:
+    """
     logger.info('Stackname: ' + stackname)
     name = stackname + '-bstrap-'
     name=name.lower()
     return name[-63:len(name)]
 
 def get_nlb_table_name(stackname, region):
+    """
+    
+    :param stackname:
+    :param region:
+    :return:
+    """
     name=stackname+"-nlb-"+region
     return name
 
 def get_firewall_table_name(stackname, region):
+    """
+ 
+    :param stackname:
+    :param region:
+    :return:
+    """
     name=stackname+"-firewall-"+region
     return name
 
@@ -368,22 +482,57 @@ def get_s3_bucket_name1(stackname, ilbtag, ip_address):
     return name[-63:len(name)]
 
 def get_lambda_cloud_watch_func_name(stackname, asg_name, instanceId):
+    """
+    Generate the name of the cloud watch metrics as a function
+    of the ASG name and the instance id.
+    :param stackname:
+    :param asg_name:
+    :param instanceId:
+    :return: str
+    """
     name = asg_name + '-cwm-' + str(instanceId)
     return name[-63:len(name)]
 
 def get_event_rule_name(stackname, instanceId):
+    """
+    Generate the name of the event rule.
+
+    :param stackname:
+    :param instanceId:
+    :return: str
+    """
     name = stackname + '-cw-event-rule-' + str(instanceId)
     return name[-63:len(name)]
 
 def get_statement_id(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = stackname + '-cw-statementid-' + str(instanceId)
     return name[-63:len(name)]
 
 def get_target_id_name(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = stackname + '-lmda-target-id' + str(instanceId)
     return name[-63:len(name)]
 
 def choose_subnet(subnet, AvailabilityZone):
+    """
+    Method to identify the subnet id based upon the
+    availability zone.
+
+    :param subnet:
+    :param AvailabilityZone:
+    :return:
+    """
     logger.info('Choose Subnets: ')
     logger.info(subnet)
     list_subnets=subnet.split(",")
@@ -400,6 +549,19 @@ def choose_subnet(subnet, AvailabilityZone):
     return ret_subnets
 
 def getASGTag(rid, key):
+    """
+    Set tags on a specified auto scale group.
+   
+    .. note:: This method is important from the perspective
+              that it allows the lambda function code to
+              distinguish ```PAN-FW``` deployed ASG's from
+              other ASG's that might already exist in the
+              customer VPC.
+   
+    :param rid: The name of the ASG
+    :param key: The tag to retrieve
+    :return: None or str
+    """
     logger.info('Getting all the tags for rid: ' + rid)
     try:
         response=asg.describe_tags(Filters=[{'Name': 'auto-scaling-group', 'Values': [rid]}])
@@ -415,6 +577,20 @@ def getASGTag(rid, key):
     return None
 
 def setASGTag(rid, key, value):
+    """
+    Set ```PAN-FW``` specific tags on an ASG.
+
+    .. note:: This method is important from the perspective
+              that it allows the lambda function code to
+              distinguish ```PAN-FW``` deployed ASG's from
+              other ASG's that might already exist in the
+              customer VPC.
+
+    :param rid: Name of the ASG
+    :param key: Tag
+    :param value: Tag Value
+    :return: None
+    """
     try:
         asg.create_or_update_tags(Tags=[{'ResourceId': rid, 'ResourceType': "auto-scaling-group", 'Key': key, 'Value': value, 'PropagateAtLaunch': False}])
     except Exception as e:
@@ -422,6 +598,19 @@ def setASGTag(rid, key, value):
     return
 
 def runCommand(gcontext, cmd, gwMgmtIp, api_key):
+    """
+
+    Method to run generic API commands against a PAN Firewall.
+
+    .. note:: This is a generic method to interact with PAN
+              firewalls to execute api calls.
+
+    :param gcontext: SSL Context
+    :param cmd: Command to execute
+    :param gwMgmtIp: Management IP of the PAN FW
+    :param api_key: API key of the Firewall
+    :return: None or str
+    """
     try:
         response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
         logger.info("[RESPONSE] in send command: {}".format(response))
@@ -445,6 +634,15 @@ def runCommand(gcontext, cmd, gwMgmtIp, api_key):
     return None
 
 def runShutdownCommand(gcontext, cmd, gwMgmtIp, api_key):
+    """
+    Method to shutdown a device.
+
+    :param gcontext:
+    :param cmd:
+    :param gwMgmtIp:
+    :param api_key:
+    :return: bool 
+    """
     try:
         response = urllib2.urlopen(cmd, context=gcontext, timeout=5).read()
         logger.info("[RESPONSE] in send command: {}".format(response))
@@ -467,6 +665,13 @@ def runShutdownCommand(gcontext, cmd, gwMgmtIp, api_key):
 
     return False
 def send_command(conn, req_url):
+    """
+    An alternative interface to interact with the PAN FW's
+
+    :param conn:
+    :param req_url:
+    :return: dict
+    """
     conn.request("POST", req_url)
     resp = conn.getresponse()
     msg = resp.read()
@@ -493,6 +698,19 @@ def send_command(conn, req_url):
         return {'result': False, 'data': None}
 
 def remove_device(stackname, remove, PanoramaIP, api_key, dev_group, tp_group, serial_no, gwMgmtIp):
+    """
+    Method to remove a device from Panorama.
+
+    :param stackname:
+    :param remove:
+    :param PanoramaIP:
+    :param api_key:
+    :param dev_group:
+    :param tp_group:
+    :param serial_no:
+    :param gwMgmtIp:
+    :return: None or str
+    """
     conn = HTTPSConnection(PanoramaIP, 443, timeout=10, context=ssl._create_unverified_context())
 
     if dev_group != "":
@@ -648,7 +866,11 @@ def get_ssl_context():
 
 def execute_api_request(gwMgmtIp, port, cmd):
     """
-     Execute API request
+    Execute API requests against the FW.
+    :param gwMgmtIp:
+    :param port:
+    :param cmd:
+    :return:
     """
     conn = None
     conn = HTTPSConnection(gwMgmtIp, port, timeout=10, context=ssl._create_unverified_context())
@@ -675,13 +897,13 @@ def get_device_serial_no(gcontext, instanceId, gwMgmtIp, fwApiKey):
     """
     Retrieve the serial number from the FW.
 
-    @param gwMgmtIP: The IP address of the FW
-    @type: ```str```
-    @param fwApiKey: Api key of the FW
-    @type: ```str```
+    :param gcontext: ssl context
+    :param instanceId: instance Id 
+    :param gwMgmtIP: The IP address of the FW
+    :param fwApiKey: Api key of the FW
 
-    @return The serial number of the FW
-    @rtype: ```str```
+    :return: The serial number of the FW
+    :rtype: str
     """
 
     serial_no = None
@@ -716,14 +938,15 @@ def deactivate_fw_license(gcontext, instanceId, gwMgmtIp, fwApiKey):
     Call the FW to deactivate the license from the licensing
     server
 
-    @param gwMgmtIP: The IP address of the Firewall
-    @type ```str```
-    @param fwApiKey: The Api key of the FW
-    @type ```str```
+    :param gcontext: ssl context
+    :param instanceId: instance Id
+    :param gwMgmtIP: The IP address of the FW
+    :param fwApiKey: Api key of the FW
 
-    @return Api call status
-    @rtype bool
+    :return: Api call status
+    :rtype: bool 
     """
+
     if gwMgmtIp is None:
         logger.error('Firewall IP could not be found. Can not interact with the device')
         return False
@@ -745,6 +968,14 @@ def deactivate_fw_license(gcontext, instanceId, gwMgmtIp, fwApiKey):
 def shutdown_fw_device(gcontext, instanceId, gwMgmtIp, fwApiKey):
     """
     Shutdown the firewall device
+
+    :param gcontext: ssl context
+    :param instanceId: instance Id
+    :param gwMgmtIP: The IP address of the FW
+    :param fwApiKey: Api key of the FW
+
+    :return: Api call status
+    :rtype: bool
     """
     if gwMgmtIp is None:
         logger.error('Firewall IP could not be found. Can not interact with the device')
@@ -768,6 +999,11 @@ def shutdown_fw_device(gcontext, instanceId, gwMgmtIp, fwApiKey):
 def set_deactivate_api_key(gcontext, instanceId, gwMgmtIp, fwApiKey, deactivateApiKey):
     """
     Setup the deactivate api key to allow the FW deactivate sequence
+    :param instanceId:
+    :param gwMgmtIp:
+    :param fwApiKey:
+    :param deactivateApiKey:
+    :return: bool
     """
 
     if gwMgmtIp is None:
@@ -789,6 +1025,16 @@ def set_deactivate_api_key(gcontext, instanceId, gwMgmtIp, fwApiKey, deactivateA
     return True
 
 def remove_fw_from_panorama(instanceId, KeyPANWPanorama, gwMgmtIp, PanoramaIP, PanoramaDG, PanoramaTPL):
+    """
+
+    :param instanceId:
+    :param KeyPANWPanorama:
+    :param gwMgmtIp:
+    :param PanoramaIP:
+    :param PanoramaDG:
+    :param PanoramaTPL:
+    :return:
+    """
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
@@ -1002,13 +1248,12 @@ def get_panorama_version(gcontext, gwMgmtIp, apiKey):
     """
     Retrieve the software version of Panorama.
 
-    @param gwMgmtIP: The IP address of the Panorama
-    @type: ```str```
-    @param apiKey: Api key of the Panorama
-    @type: ```str```
+    :param gcontext: ssl context
+    :param gwMgmtIP: The IP address of the FW
+    :param apiKey: Api key of the Panorama
 
-    @return The software version of the Panorama
-    @rtype: ```str```
+    :return: The software version of the Panorama
+    :rtype: str 
     """
 
     sw_ver = None
@@ -1039,6 +1284,12 @@ def get_panorama_version(gcontext, gwMgmtIp, apiKey):
 
 
 def release_eip(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     logger.info('Releasing Elastic IPs...')
     try:
         response=ec2_client.describe_network_interfaces(Filters=[{'Name': "attachment.instance-id", 'Values': [str(instanceId)]}])
@@ -1066,11 +1317,21 @@ def release_eip(stackname, instanceId):
     return
 
 def random_string(string_length=10):
+    """
+
+    :param string_length:
+    :return:
+    """
     random = str(uuid.uuid4())
     random = random.replace("-","")
     return random[0:string_length]
 
 def common_alarm_func_del(alarmname):
+    """
+
+    :param alarmname:
+    :return:
+    """
     a1=alarmname + '-high'
     cloudwatch.delete_alarms(AlarmNames=[a1])
 
@@ -1079,6 +1340,11 @@ def common_alarm_func_del(alarmname):
     return
 
 def remove_s3_bucket(s3_bucket_name):
+    """
+
+    :param s3_bucket_name:
+    :return:
+    """
     logger.info('Removing keys from S3 bootstrap bucket: ' + s3_bucket_name)
 
     try:
@@ -1095,6 +1361,11 @@ def remove_s3_bucket(s3_bucket_name):
     return
 
 def remove_asg_life_cycle(asg_name):
+    """
+
+    :param asg_name:
+    :return:
+    """
     logger.info('Removing Life Cycle Hooks for ASG: ' + asg_name)
     hookname=asg_name + '-life-cycle-launch'
     try:
@@ -1109,6 +1380,14 @@ def remove_asg_life_cycle(asg_name):
     return
 
 def remove_asg_vms(stackname, asg_grp_name, KeyPANWPanorama, delete_stack):
+    """
+
+    :param stackname:
+    :param :asg_grp_name:
+    :param :KeyPANWPanorama:
+    :param :delete_stack:
+    :return:
+    """
     response=asg.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_grp_name])
    
     # Initiate removal of all EC2 instances associated to ASG
@@ -1129,6 +1408,11 @@ def remove_asg_vms(stackname, asg_grp_name, KeyPANWPanorama, delete_stack):
     return found
 
 def common_alarm_func_del(alarmname):
+    """
+
+    :param alarmname:
+    :return:
+    """
     a1=alarmname + '-high'
     logger.info('Removing Alarm Name: ' + alarmname + ' High: ' + a1)
     try:
@@ -1145,6 +1429,11 @@ def common_alarm_func_del(alarmname):
     return
 
 def remove_alarm(asg_name):
+    """
+
+    :param asg_name:
+    :return:
+    """
     alarmname= asg_name + '-cw-cpu'
     common_alarm_func_del(alarmname)
 
@@ -1183,13 +1472,21 @@ def scalein_asg(stackname, elbtg, az):
 
 
 def remove_asg(stackname, elbtg, az, ScalingParameter, KeyPANWPanorama, force, delete_stack):
-    #s3_bucket_name=get_s3_bucket_name(stackname, ilbtag)
+    """
+
+    :param stackname:
+    :param elbtg:
+    :param az:
+    :param ScalingParameter:
+    :param KeyPANWPanorama:
+    :param force:
+    :param delete_stack:
+    :return:
+    """
     asg_grp_name=get_asg_name(stackname, elbtg, az)
 
     logger.info('Remove ASG: ' + asg_grp_name)
 
-    #if enable_s3 == True:
-    #    remove_s3_bucket(s3_bucket_name)
     try:
         logger.info('Disable metrics collection and Set Min and Desired Capacity to 0 for ASG: ' + asg_grp_name)
         asg.disable_metrics_collection(AutoScalingGroupName=asg_grp_name)
@@ -1262,12 +1559,15 @@ def remove_asg(stackname, elbtg, az, ScalingParameter, KeyPANWPanorama, force, d
          if force == False:
              return False
 
-    #if enable_s3 == True:
-    #    remove_s3_bucket(s3_bucket_name)
-
     return True
 
 def read_s3_object(bucket, key):
+    """
+
+    :param bucket:
+    :param key:
+    :return:
+    """
     # Get the object from the event and show its content type
     key = urllib.unquote_plus(key).decode('utf8')
     try:
@@ -1282,6 +1582,11 @@ def read_s3_object(bucket, key):
         return None
 
 def get_values_from_init_cfg(contents):
+    """
+    Retrieve the keys from the init-cfg file
+    :param contents:
+    :return: dict
+    """
     d = {'panorama-server': "", 'tplname': "", 'dgname': "", 'hostname': ""}
     if contents is None:
         return d
@@ -1306,6 +1611,13 @@ def get_values_from_init_cfg(contents):
 
 
 def panorama_remove_serial_and_ip(stackname, r, pdict):
+    """
+
+    :param stackname:
+    :param r:
+    :param pdict:
+    :return:
+    """
     if pdict is None:
         return
 
@@ -1331,6 +1643,12 @@ def panorama_remove_serial_and_ip(stackname, r, pdict):
     return
 
 def panorama_save_serial_and_ip(stackname, r):
+    """
+
+    :param stackname:
+    :param r:
+    :return:
+    """
     pdict = []
 
     BootstrapS3Bucket=r['BootstrapS3Bucket']
@@ -1374,6 +1692,13 @@ def panorama_save_serial_and_ip(stackname, r):
 
 
 def panorama_delete_stack(bsS3Bucket, asg_name, keyPanoramam):
+    """
+
+    :param bsS3Bucket:
+    :param asg_name:
+    :param keyPanoramam:
+    :return:
+    """
     c=read_s3_object(bsS3Bucket, "config/init-cfg.txt")
     dict = get_values_from_init_cfg(c)
     logger.info('Panorama: Init CFG bootstrap file Panorama settings is as follows: ')
@@ -1413,6 +1738,17 @@ def panorama_delete_stack(bsS3Bucket, asg_name, keyPanoramam):
     return
 
 def delete_asg_stack(stackname, elbtg, bsS3Bucket, ScalingParameter, keyPanoramam, force, subnet_ids):
+    """
+
+    :param stackname:
+    :param elbtg:
+    :param bsS3Bucket:
+    :param ScalingParameter:
+    :param KeyPANWPanorama:
+    :param force:
+    :param subnet_ids:
+    :return:
+    """
     found = False
 
     azs = getAzs(subnet_ids)
@@ -1436,6 +1772,11 @@ def delete_asg_stack(stackname, elbtg, bsS3Bucket, ScalingParameter, keyPanorama
 # Lambda ENIs when deployed in NAT Gateway mode don't go away (because of VPCconfig)
 #
 def delete_eni_lambda(vpc_sg):
+    """
+
+    :param vpc_sg:
+    :return:
+    """
     print('Look for ENIs in Lambda VPC SG: ' + vpc_sg)
     response=ec2_client.describe_network_interfaces(Filters=[{'Name': "group-id", 'Values': [str(vpc_sg)]}])
     print(response)
@@ -1472,6 +1813,17 @@ def delete_eni_lambda(vpc_sg):
 
 
 def delete_asg_stacks(stackname, elbtg, vpc_sg, bsS3Bucket, ScalingParameter, KeyPANWPanorama, subnet_ids):
+    """
+
+    :param stackname:
+    :param elbtg:
+    :param vpc_sg:
+    :param bsS3Bucket:
+    :param ScalingParameter:
+    :param KeyPANWPanorama:
+    :param subnet_ids:
+    :return:
+    """
     force=False
     for i in range(1,90):
         logger.info('Attemping to Delete ASGs Iternation: ' + str(i))
@@ -1502,6 +1854,11 @@ def delete_asg_stacks(stackname, elbtg, vpc_sg, bsS3Bucket, ScalingParameter, Ke
     return
 
 def getAccountId(rid):
+    """
+
+    :param rid:
+    :return:
+    """
     try:
         list=rid.split(":")
         return list[4]
@@ -1509,6 +1866,11 @@ def getAccountId(rid):
         return None
 
 def getRegion(rid):
+    """
+
+    :param rid:
+    :return:
+    """
     try:
         list=rid.split(":")
         return list[3]
@@ -1516,6 +1878,13 @@ def getRegion(rid):
         return None
 
 def getSqs(stackname, region, account):
+    """
+
+    :param stackname:
+    :param region:
+    :param account:
+    :return:
+    """
     try:
         queue_url="https://"+region+".queue.amazonaws.com/"+account+"/"+stackname
         #print('getSqs Queue is: ' + queue_url)
@@ -1536,6 +1905,12 @@ def getSqs(stackname, region, account):
     return None
 
 def getSqsMessages(stackname, account):
+    """
+
+    :param stackname:
+    :param account:
+    :return:
+    """
     region=getRegion(account)
     if region is None:
         return None
@@ -1545,6 +1920,11 @@ def getSqsMessages(stackname, account):
     return msg
 
 def getDebugLevelFromMsg(msg):
+    """
+
+    :param msg:
+    :return:
+    """
     #print('Message is 1: ' + msg)
     list=msg.split(":")
     for i in list:
@@ -1555,6 +1935,12 @@ def getDebugLevelFromMsg(msg):
             return value
 
 def setDebugLevelFromMsg(logger, lvl):
+    """
+
+    :param logger:
+    :param lvl:
+    :return:
+    """
     #print('Setting lvl to: ' + lvl)
     if lvl is None:
         logger.setLevel(logging.WARNING)
@@ -1570,6 +1956,13 @@ def setDebugLevelFromMsg(logger, lvl):
         logger.setLevel(logging.CRITICAL)
 
 def getDebugLevel(stackname, region, account):
+    """
+
+    :param stackname:
+    :param region:
+    :param account:
+    :return:
+    """
     try:
         queue_url="https://"+region+".queue.amazonaws.com/"+account+"/"+stackname
         #print('Queue Name is : ' + queue_url)
@@ -1588,6 +1981,13 @@ def getDebugLevel(stackname, region, account):
          return None
 
 def setLoggerLevel(logger, stackname, account):
+    """
+
+    :param logger:
+    :param stackname:
+    :param account:
+    :return:
+    """
     region=getRegion(account)
     if region is None:
         return None
@@ -1609,6 +2009,12 @@ def setLoggerLevel(logger, stackname, account):
         logger.setLevel(logging.CRITICAL)
 
 def getScalingValue(msg, ScalingParameter):
+    """
+
+    :param msg:
+    :param ScalingParameter:
+    :return:
+    """
     print('getScalingValue()...')
     print(msg)
     try:
@@ -1634,6 +2040,12 @@ def getScalingValue(msg, ScalingParameter):
     return None
 
 def getUntrustIP(instanceid, untrust):
+    """
+
+    :param instanceid:
+    :param untrust:
+    :return:
+    """
     logger.info('Getting IP address of Untrust Interface for instance: ' + instanceid)
     ip=""
     found=False
@@ -1656,6 +2068,11 @@ def getUntrustIP(instanceid, untrust):
     return None
 
 def getAzs(subnet_ids):
+    """
+    
+    :param subnet_ids:
+    :return:
+    """
     fw_azs = []
     subnetids=subnet_ids.split(',')
     for i in subnetids:
@@ -1664,6 +2081,11 @@ def getAzs(subnet_ids):
     return fw_azs
 
 def delete_table(tablename):
+    """
+    
+    :param tablename:
+    :return:
+    """
     dynamodb = boto3.client('dynamodb')
 
     try:
@@ -1674,6 +2096,12 @@ def delete_table(tablename):
         return False
 
 def create_firewall_table(stack_name, region):
+    """
+
+    :param stack_name:
+    :param region:
+    :return:
+    """
 
     table_name=get_firewall_table_name(stack_name, region)
 
@@ -1739,6 +2167,12 @@ def create_firewall_table(stack_name, region):
         return False
 
 def create_nlb_table(stack_name, region):
+    """
+
+    :param stack_name:
+    :param region:
+    :return:
+    """
     table_name=get_nlb_table_name(stack_name, region)
 
     try:
@@ -1845,6 +2279,21 @@ def create_nlb_table(stack_name, region):
         return False
 
 def nlb_table_add_entry(stack_name, region, nlb_ip, port, nlb_state, nlb_zone_name, nlb_subnet_id, total_avail_zones, avail_zone_index, dns_name, nlb_name):
+    """
+
+    :param stack_name:
+    :param region:
+    :param nlb_ip:
+    :param port:
+    :param nlb_state:
+    :param nlb_zone_name:
+    :param nlb_subnet_id:
+    :param total_avail_zones:
+    :param avail_zone_index:
+    :param dns_name:
+    :param nlb_name:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1868,6 +2317,13 @@ def nlb_table_add_entry(stack_name, region, nlb_ip, port, nlb_state, nlb_zone_na
         return False
 
 def nlb_table_delete_entry(stack_name, region, nlb_ip):
+    """
+
+    :param stack_name:
+    :param region:
+    :param nlb_ip:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1882,6 +2338,13 @@ def nlb_table_delete_entry(stack_name, region, nlb_ip):
         return False
 
 def nlb_table_delete_entry_by_dnsname(stack_name, region, dns_name):
+    """
+
+    :param stack_name:
+    :param region:
+    :param dns_name:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1901,6 +2364,13 @@ def nlb_table_delete_entry_by_dnsname(stack_name, region, dns_name):
         return False
 
 def nlb_table_get_entry_by_dnsname(stack_name, region, dns_name):
+    """
+
+    :param stack_name:
+    :param region:
+    :param dns_name:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1913,6 +2383,14 @@ def nlb_table_get_entry_by_dnsname(stack_name, region, dns_name):
         return None
 
 def nlb_table_update_state(stack_name, region, nlb_ip, nlb_state):
+    """
+
+    :param stack_name:
+    :param region:
+    :param nlb_ip:
+    :param nlb_state:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1928,6 +2406,13 @@ def nlb_table_update_state(stack_name, region, nlb_ip, nlb_state):
 
 
 def nlb_table_get_from_db(stack_name, region, nlb_ip):
+    """
+
+    :param stack_name:
+    :param region:
+    :param nlb_ip:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1940,6 +2425,12 @@ def nlb_table_get_from_db(stack_name, region, nlb_ip):
         return None
 
 def nlb_table_get_next_avail_port(stack_name, region):
+    """
+
+    :param stack_name:
+    :param region:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1965,6 +2456,13 @@ def nlb_table_get_next_avail_port(stack_name, region):
     return 0
 
 def nlb_table_get_all_in_state(stack_name, region, state):
+    """
+
+    :param stack_name:
+    :param region:
+    :param state:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -1977,6 +2475,20 @@ def nlb_table_get_all_in_state(stack_name, region, state):
         return None
 
 def firewall_table_add_instance(stack_name, region, avail_zone, instance_id, state, term_state, asg_name, ip, pip, untrust_ip):
+    """
+
+    :param stack_name:
+    :param region:
+    :param avail_zone:
+    :param instance_id:
+    :param state:
+    :param term_state:
+    :param asg_name:
+    :param ip:
+    :param pip:
+    :param untrust_ip:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2019,6 +2531,14 @@ def firewall_table_add_instance(stack_name, region, avail_zone, instance_id, sta
 
 
 def firewall_table_update_state(stack_name, region, instance_id, state):
+    """
+
+    :param stack_name:
+    :param region:
+    :param instance_id:
+    :param state:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2033,6 +2553,14 @@ def firewall_table_update_state(stack_name, region, instance_id, state):
         return False
 
 def firewall_table_update_rule_mask(stack_name, region, instance_id, rule_mask):
+    """
+
+    :param stack_name:
+    :param region:
+    :param instance_id:
+    :param rule_mask:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2064,6 +2592,13 @@ def firewall_table_update_rule_mask(stack_name, region, instance_id, rule_mask):
 
 
 def firewall_table_get_from_db(stack_name, region, instance_id):
+    """
+
+    :param stack_name:
+    :param region:
+    :param instance_id:
+    :return:
+    """
     try:
         table_name=get_nlb_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2076,6 +2611,13 @@ def firewall_table_get_from_db(stack_name, region, instance_id):
         return None
 
 def firewall_table_delete_instance1(stack_name, region, instance_id):
+    """
+
+    :param stack_name:
+    :param region:
+    :param instance_id:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2096,6 +2638,13 @@ def firewall_table_delete_instance1(stack_name, region, instance_id):
         return False
 
 def firewall_table_delete_instance(stack_name, region, instance_id):
+    """
+
+    :param stack_name:
+    :param region:
+    :param instance_id:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2110,6 +2659,14 @@ def firewall_table_delete_instance(stack_name, region, instance_id):
         return False
 
 def firewall_table_get_all_in_az_state(stack_name, region, state, avail_zone):
+    """
+
+    :param stack_name:
+    :param region:
+    :param state:
+    :param avail_zone:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2122,6 +2679,13 @@ def firewall_table_get_all_in_az_state(stack_name, region, state, avail_zone):
         return None
 
 def firewall_table_get_all_in_state(stack_name, region, state):
+    """
+        
+    :param stack_name:
+    :param region:
+    :param state:
+    :return:
+    """
     try:
         table_name=get_firewall_table_name(stack_name, region)
         table=dynamodb.Table(table_name)
@@ -2136,6 +2700,11 @@ def firewall_table_get_all_in_state(stack_name, region, state):
 remote=0
 
 def pan_print(s):
+    """
+        
+    :param s:
+    :return:
+    """
     if remote > 0:
         logger.info(s)
         return
@@ -2143,6 +2712,11 @@ def pan_print(s):
     return
 
 def getChassisReady(response):
+    """
+
+    :param response:
+    :return:
+    """
     s1=response.replace('\n',"")
     s1=s1.replace(" ","")
     if s1.find("<![CDATA[no]]") > 0:
@@ -2152,30 +2726,57 @@ def getChassisReady(response):
     return False
 
 def getJobStatus(response):
+    """
+
+    :param response:
+    :return:
+    """
     s1=response.replace("/","")
     index=s1.find("<status>")
     list=s1.split("<status>")
     return list[1]
 
 def getJobResult(response):
+    """
+
+    :param response:
+    :return:
+    """
     s1=response.replace("/","")
     index=s1.find("<result>")
     list=s1.split("<result>")
     return list[2]
 
 def getJobTfin(response):
+    """
+
+    :param response:
+    :return:
+    """
     s1=response.replace("/","")
     index=s1.find("<tfin>")
     list=s1.split("<tfin>")
     return list[1]
 
 def getJobProgress(response):
+    """
+
+    :param response:
+    :return:
+    """
     s1=response.replace("/","")
     index=s1.find("<progress>")
     list=s1.split("<progress>")
     return list[1]
 
 def is_firewall_ready(gcontext, gwMgmtIp, api_key):
+    """
+
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :return:
+    """
     pan_print('Checking whether Chassis is ready or not')
     cmd="<show><chassis-ready/></show>"
     fw_cmd= "https://"+gwMgmtIp+"/api/?type=op&cmd=" + cmd + "&key="+api_key
@@ -2198,6 +2799,13 @@ def is_firewall_ready(gcontext, gwMgmtIp, api_key):
     return False
 
 def is_firewall_auto_commit_done(gcontext, gwMgmtIp, api_key):
+    """
+    
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :return:
+    """
     pan_print('Checking whether AutoCommit is done or not')
     cmd="<show><jobs><id>1</id></jobs></show>"
     fw_cmd= "https://"+gwMgmtIp+"/api/?type=op&cmd=" + cmd + "&key="+api_key
@@ -2227,7 +2835,15 @@ def is_firewall_auto_commit_done(gcontext, gwMgmtIp, api_key):
 
     return False
 
-def config_firewall_cloudwatch_name(gcontext, gwMgmtIp, api_key, asg_name):
+def config_firewall_init_setting(gcontext, gwMgmtIp, api_key, asg_name, untrust_ip):
+    """
+    
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :param asg_name:
+    :return:
+    """
     pan_print('Set firewall cloudwatch asg name')
     fw_cmd="https://"+gwMgmtIp+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/deviceconfig/setting/aws-cloudwatch&element=<name>"+asg_name+"</name>"
 
@@ -2239,6 +2855,20 @@ def config_firewall_cloudwatch_name(gcontext, gwMgmtIp, api_key, asg_name):
     except Exception as e:
          #logger.error("[NAT Address RESPONSE]: {}".format(e))
          pan_print("[CFG_FW_CW_NAME RESPONSE]: {}".format(e))
+         return False
+
+    pan_print('Set firewall untrust address object')
+
+    fw_cmd="https://"+gwMgmtIp+"/api/?type=config&action=set&key="+api_key+"&xpath=/config/devices/entry/vsys/entry/address&element=<entry%20name='AWS-NAT-UNTRUST'><description>UNTRUST-IP-address</description><ip-netmask>"+untrust_ip+"</ip-netmask></entry>"
+
+    try:
+        response = runCommand(gcontext, fw_cmd, gwMgmtIp, api_key)
+        if response is None:
+            pan_print('CFG_FW_UNTRUST_ADDR_OBJ: Failed to run command: ' + fw_cmd)
+            return False
+    except Exception as e:
+         #logger.error("[NAT Address RESPONSE]: {}".format(e))
+         pan_print("[CFG_FW_UNTRUST_ADDR_OBJ RESPONSE]: {}".format(e))
          return False
 
     fw_cmd="https://"+gwMgmtIp+"/api/?type=commit&cmd=<commit></commit>&key="+api_key
@@ -2255,6 +2885,19 @@ def config_firewall_cloudwatch_name(gcontext, gwMgmtIp, api_key, asg_name):
     return True
 
 def config_firewall_add_nat_rule(gcontext, gwMgmtIp, api_key, untrust_ip, nlb_port, nlb_ip, static_route, default_gw, commit):
+    """
+
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :param untrust_ip:
+    :param nlb_port:
+    :param nlb_ip:
+    :param static_route:
+    :param default_gw:
+    :param commit:
+    :return:
+    """
     pan_print('Add firewall NAT rule port: {} ip: {}'.format(nlb_port, nlb_ip))
     # Add service tcp/port for NAT
     service_name="'"+'tcp'+str(nlb_port)+"'"
@@ -2312,6 +2955,16 @@ def config_firewall_add_nat_rule(gcontext, gwMgmtIp, api_key, untrust_ip, nlb_po
     return True
 
 def config_firewall_delete_nat_rule(gcontext, gwMgmtIp, api_key,  nlb_port, static_route, commit):
+    """
+
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :param nlb_port:
+    :param static_route:
+    :param commit:
+    :return:
+    """
     pan_print('Delete firewall NAT rule port: {}'.format(nlb_port))
     nat_rule_name="'"+'port'+str(nlb_port)+"'"
     # Delete route
@@ -2369,6 +3022,13 @@ def config_firewall_delete_nat_rule(gcontext, gwMgmtIp, api_key,  nlb_port, stat
     return True
 
 def config_firewall_commit(gcontext, gwMgmtIp, api_key):
+    """
+
+    :param gcontext:
+    :param gwMgmtIp:
+    :param api_key:
+    :return:
+    """
     pan_print('Commit configuration on firewall: {}'.format(gwMgmtIp))
 
     fw_cmd="https://"+gwMgmtIp+"/api/?type=commit&cmd=<commit></commit>&key="+api_key

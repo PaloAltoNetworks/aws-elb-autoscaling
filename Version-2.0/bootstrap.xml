@@ -426,7 +426,12 @@
               </interface>
             </network>
           </import>
-          <address/>
+          <address>
+            <entry name="AWS-NAT-UNTRUST">
+              <ip-netmask>192.168.11.115</ip-netmask>
+              <description>UNTRUST-IP-address</description>
+            </entry>
+          </address>
         </entry>
       </vsys>
     </entry>

@@ -69,27 +69,61 @@ valid_panfw_productcode_byol = {
 
 
 def get_lambda_cloud_watch_func_name(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = asg_name + '-cwm-' + str(instanceId)
     return name[-63:len(name)]
     
 def get_event_rule_name(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = stackname + '-cw-event-rule-' + str(instanceId)
     return name[-63:len(name)]
     
 def get_statement_id(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = stackname + '-cw-statementid-' + str(instanceId)
     return name[-63:len(name)]
     
 def get_target_id_name(stackname, instanceId):
+    """
+
+    :param stackname:
+    :param instanceId:
+    :return:
+    """
     name = stackname + '-lmda-target-id' + str(instanceId)
     return name[-63:len(name)]
     
 def random_string(string_length=10):
+    """
+
+    :param string_length:
+    :return:
+    """
     random = str(uuid.uuid4()) 
     random = random.replace("-","") 
     return random[0:string_length]
 
 def remove_eni_in_subnet(subnet):
+    """
+
+    :param subnet:
+    :return:
+    """
     response=ec2_client.describe_network_interfaces(Filters=[{'Name': "subnet-id", 'Values': [str(subnet)]}])
     for i in response['NetworkInterfaces']:
         if i['Status'] == "available":
@@ -104,6 +138,11 @@ def remove_eni_in_subnet(subnet):
     return
 
 def remove_eni(message):
+    """
+
+    :param message:
+    :return:
+    """
     instanceId = message['EC2InstanceId']
     logger.info('Removing Network Interfaces for instanceId: ' + instanceId)
     
@@ -166,6 +205,12 @@ def remove_eni(message):
     return
 
 def count_eni(msg, instanceId):
+    """
+
+    :param msg:
+    :param instanceId:
+    :return:
+    """
     response=ec2_client.describe_network_interfaces(Filters=[{'Name': "attachment.instance-id", 'Values': [str(instanceId)]}])
     #logger.info(response)
     cnt = 0
@@ -175,6 +220,12 @@ def count_eni(msg, instanceId):
     return cnt
 
 def associateAddress(AllocId, nifId):
+    """
+
+    :param AllocId:
+    :param nifId:
+    :return bool:
+    """
     logger.info('EIP Associate AllocId: ' + str(AllocId) + ' ENI Id: ' + str(nifId))
     try:
         ec2_client.associate_address(AllocationId=AllocId, NetworkInterfaceId=nifId)
@@ -186,6 +237,11 @@ def associateAddress(AllocId, nifId):
         return True
 
 def getUnassociatedAddress(eip_list):
+    """
+
+    :param eip_list:
+    :return:
+    """
     fail = {'PublicIp': 'None', 'Domain': 'vpc', 'AllocationId': 'None'}
     logger.info("Trying to find and eip that is not associated")
     logger.info(eip_list)
@@ -201,6 +257,12 @@ def getUnassociatedAddress(eip_list):
     return None
 
 def get_eip(mgmt_eniId, mgmt_instanceId):
+    """
+
+    :param mgmt_eniId:
+    :param mgmt_instanceId:
+    :return:
+    """
     fail = {'PublicIp': 'None', 'Domain': 'vpc', 'AllocationId': 'None'}
     dict = ec2_client.describe_addresses()
     logger.info(dict)
@@ -231,19 +293,12 @@ def get_eip(mgmt_eniId, mgmt_instanceId):
 def handle_instance_termination(fwApiKey, instanceId, delicenseKey, fwMgmtIp):
     """
     Execute the sequence to deactivate the Firewall in the case of BYOL.
-
-    @param fwAPiKey: Api key to interact with the firewall
-    @type ```str```
-    @param instance_id The id of the instance
-    @type ```str```
-    @type ```str```
-    @param delicenseKey
-    @type ```str```
-
-    @return Status of the firewall license deactivation workflow
-    @rtype bool
+    :param fwApiKey:
+    :param instanceId:
+    :param delicenseKey:
+    :param fwMgmtIp:
+    :return bool:
     """
-
 
     fwcontext = lib.get_ssl_context()
 
@@ -288,27 +343,31 @@ def handle_instance_termination(fwApiKey, instanceId, delicenseKey, fwMgmtIp):
                         break
             except Exception as e:
                 logger.exception("Exception occurred during deactivate license for device: {} with IP: {}. Error:  {}".format(instanceId, fwMgmtIp, e))
+            time.sleep(30)
         else:
             logger.warning('Key to de-activate the FW was not specified. Cannot de-activate license without a valid key.')
-
-        try:
-            time.sleep(30)
-            logger.info('Attempting to shutdown the fw device: {} with IP: {}'.format(instanceId, fwMgmtIp))
-            ret = lib.shutdown_fw_device(fwcontext, instanceId, fwMgmtIp, fwApiKey)
-            if not ret:
-                logger.error('Error encountered while shutting down the firewall device: {} with IP: {}'.format(instanceId, fwMgmtIp))
-                return False
-            logger.info("Firewall device: {} with IP: {} successfully shutdown.".format(instanceId, fwMgmtIp))
-        except Exception as e:
-            logger.exception('Exeption shutting down firewall device: {} with IP:{} Error: {}'.format(instanceId, fwMgmtIp, e))
     else:
         logger.info("This firewall device does not have a BYOL license.")
-    
+   
+    try:
+        logger.info('Attempting to shutdown the fw device: {} with IP: {}'.format(instanceId, fwMgmtIp))
+        ret = lib.shutdown_fw_device(fwcontext, instanceId, fwMgmtIp, fwApiKey)
+        if not ret:
+            logger.error('Error encountered while shutting down the firewall device: {} with IP: {}'.format(instanceId, fwMgmtIp))
+            return False
+        logger.info("Firewall device: {} with IP: {} successfully shutdown.".format(instanceId, fwMgmtIp))
+    except Exception as e:
+        logger.exception('Exeption shutting down firewall device: {} with IP:{} Error: {}'.format(instanceId, fwMgmtIp, e))
+ 
     logger.info('Termination sequence completed.')    
     return True
 
 def get_stack_params(queue_url):
+    """
 
+    :param queue_url:
+    :return:
+    """
     for retry in xrange(0, 5):
         time.sleep(5)
         try:
@@ -327,6 +386,22 @@ def get_stack_params(queue_url):
 
 
 def lambda_handler(event, context):
+    """
+    The entry point when this lambda function gets
+    invoked.
+
+    .. note:: The primary objective of this lambda funciton
+              is to handle life-cycle hooks and to create / delete
+              elastic network interfaces to assign / disassociate to / from
+              instances.
+
+    :param event: Encodes all the input variables to the lambda function, when
+                      the function is invoked.
+                      Essentially AWS Lambda uses this parameter to pass in event
+                      data to the handler function.
+    :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+    :return: None
+    """
     global asg_name
     global PanS3KeyTpl
     global PanS3BucketTpl
@@ -541,6 +616,14 @@ def lambda_handler(event, context):
     return
 
 def abandon(context, asg_message):
+    """
+    Method to send a response to the
+    auto scale life cycle action.
+
+    :param context:
+    :param asg_message:
+    :return:
+    """
     result = "ABANDON";
 
     #call autoscaling
@@ -554,6 +637,15 @@ def abandon(context, asg_message):
         logger.error("[complete_lifecycle_action]: {}".format(e))
 
 def done(success, context, asg_message):
+    """
+    Method to send a successful response to an
+    ASG lifecycle action.
+
+    :param success:
+    :param context:
+    :param asg_message:
+    :return:
+    """
     result = "CONTINUE";
 
     #call autoscaling
@@ -571,6 +663,13 @@ def done(success, context, asg_message):
         
 #Create a network interface, pass the Interface ID to callback
 def createEni(subnetId, securityGroups, index):
+    """
+    Method to create and Elastic Network Interface
+    :param subnetId:
+    :param securityGroups:
+    :param index:
+    :return:
+    """
     global nif
     global eniId
     
@@ -602,6 +701,11 @@ def createEni(subnetId, securityGroups, index):
         return 'true'
 
 def removeEni(eniId1):
+    """
+    Method to disassociate an ENI from an instance.
+    :param eniId1:
+    :return:
+    """
     try:
         ec2_client.delete_network_interface(NetworkInterfaceId=eniId1)
     except Exception as e:
@@ -610,6 +714,11 @@ def removeEni(eniId1):
     return
 
 def waitEniReady(eniId):
+    """
+    Method to check if an ENI is ready
+    :param eniId:
+    :return:
+    """
     try:
         waiter = ec2_client.get_waiter('network_interface_available')
         waiter.wait(NetworkInterfaceIds=[eniId], Filters= [{'Name' : 'status', 'Values': ['available']}])
@@ -621,6 +730,13 @@ def waitEniReady(eniId):
 
 
 def attachEni(ec2Id, eniId, index):
+    """
+    Method to attach and ENI to an instance
+    :param ec2Id:
+    :param eniId:
+    :param index:
+    :return:
+    """
     try:
         response=ec2_client.attach_network_interface(NetworkInterfaceId=eniId, InstanceId=ec2Id,DeviceIndex=index)
         aid=response['AttachmentId']

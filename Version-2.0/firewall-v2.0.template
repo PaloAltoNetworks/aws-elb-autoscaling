@@ -50,13 +50,12 @@
        "Type" : "AWS::EC2::KeyPair::KeyName"
     },
     "SSHLocation" : {
-      "Description" : "Restrict SSH access to the VM-Series firewall (by default can be accessed from anywhere)",
+      "Description" : "Restrict SSH access to the VM-Series firewall (enter a valid CIDR range in the format of x.x.x.x/x)",
       "Type" : "String",
       "MinLength": "9",
       "MaxLength": "18",
-      "Default" : "0.0.0.0/0",
       "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+      "ConstraintDescription" : "must be a valid CIDR range in the format of x.x.x.x/x"
     },
     "VpcAzs": {
       "Type": "List<AWS::EC2::AvailabilityZone::Name>",
@@ -1185,39 +1184,46 @@
     "ScalingParameter": {
       "Value": { "Fn::FindInMap" : [ "ASGScaleMap", "ScalingParam", "CPU" ] },
       "Description": "Scaling Parameter you have selected"
-   },
-   "ELBName": {
+    },
+    "ELBName": {
       "Value": { "Ref": "ELBName" },
       "Description": "Elastic Application Load Balancer (Public) name"
-   },
-   "ELBDNSName": {
+    },
+    "ELBDNSName": {
       "Value": { "Fn::GetAtt" : ["PublicLoadBalancer", "DNSName"] },
       "Description": "Elastic Application Load Balancer (Public) DNS name"
-   },
-   "KeyName": {
+    },
+    "KeyName": {
       "Value": { "Ref": "KeyName" },
       "Description": "Key Pair you have selected for SSH"
-   },
-   "SSHLocation": {
+    },
+    "SSHLocation": {
       "Value": { "Ref": "SSHLocation" },
       "Description": "Make sure you SSH from this IP address"
-   },
-   "BootstrapS3Bucket": {
+    },
+    "BootstrapS3Bucket": {
       "Value": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWBootstrap", { "Fn::Join": [ "-", [ { "Fn::FindInMap" : [ "BucketRegionMap", "BootstrapRegion", "DefaultRegion" ]}, { "Ref": "AWS::Region" }]]}, { "Ref" : "BootstrapS3Bucket" }] }] ] },
       "Description": "Your Bootstrap bucket being used for this deployment"
-   },
-   "LambdaS3Bucket": {
+    },
+    "LambdaS3Bucket": {
       "Value": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ { "Fn::FindInMap" : [ "BucketRegionMap", "LambdaRegion", "DefaultRegion" ]}, { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] }] ] },
       "Description": "Your Template/Lambda Code bucket being used for this deployment"
-   },
-   "LambdaCodeFile": {
+    },
+    "LambdaCodeFile": {
       "Value": { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] },
       "Description": "File name of the Lambda Code being run"
-   },
+    },
     "NetworkLoadBalancerQueue": {
       "Value": { "Ref": "NetworkLoadBalancerQueue" },
       "Description": "Network Load Balancer queue"
-   }
-
+    },
+    "NATGateway1": {
+      "Value": { "Ref": "EIP1" },
+      "Description": "NAT Gateway for Internet access"
+    },
+    "NATGateway2": {
+      "Value": { "Ref": "EIP2" },
+      "Description": "NAT Gateway for Internet access"
+    }
   }
 }

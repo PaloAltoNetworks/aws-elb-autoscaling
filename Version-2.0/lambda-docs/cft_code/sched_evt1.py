@@ -103,24 +103,31 @@ elbv2 = boto3.client('elbv2')
 
 ####### FUNCTIONS ############
 def random_string(string_length=10):
+    """
+
+    :param string_length:
+    :return:
+    """
     random = str(uuid.uuid4()) 
     random = random.replace("-","") 
     return random[0:string_length]
-'''
-def find_ip_address(asg_response, ip_address):
-    found=0
-    asg_name = lib.get_asg_name(stackname, ip_address)
-    logger.info('Finding IP address: ' + ip_address +  ' of ILB against ASG:' + asg_name)
-    #logger.info(asg_response)
-    for i in asg_response['AutoScalingGroups']:
-        logger.info('Looking for ASG Name: ' +  asg_name + ', Item ASG Name: ' + i['AutoScalingGroupName'])
-        if i['AutoScalingGroupName'] == asg_name:
-            logger.info('FOUND ASG Name: ' +  asg_name)
-            found=1
-    return found
-'''
 
 def common_alarm_func_add(asg_name, metricname, namespace, arn_scalein, arn_scaleout, alarmname, desc, Unit):
+    """
+
+    Method that supports a common interface to add cloud watch alarms along with the associated threshold
+    metrics.
+
+    :param asg_name: Name of the ASG that this alarm is associated with.
+    :param metricname: Name of the metric.
+    :param namespace: Name of the namespace.
+    :param arn_scalein: ARN of the scale-in metric.
+    :param arn_scaleout: ARN of the scale-out metric.
+    :param alarmname: Name of the alarm that will be raised.
+    :param desc: Description of the alarm
+    :param Unit: The unit to be used.
+    :return: bool
+    """
     d1=desc+ " High"
     a1=alarmname + '-high'
     try:
@@ -151,6 +158,11 @@ def common_alarm_func_add(asg_name, metricname, namespace, arn_scalein, arn_scal
     return True
 
 def common_alarm_func_del(alarmname):
+    """
+    Common interface to delete alarms
+    :param alarmname: Name of the alarm to delete.
+    :return: None
+    """
     a1=alarmname + '-high'
     cloudwatch.delete_alarms(AlarmNames=[a1])
 
@@ -160,6 +172,16 @@ def common_alarm_func_del(alarmname):
 
 ## CloudWatch Alarms
 def AddDataPlaneCPUUtilization(asg_name, arn_scalein, arn_scaleout):
+    """
+    Method to create the DataPlaneCPUUtilization Alarm. This alarm
+    will trigger when the Data Plane CPU Utilization exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :param arn_scalein: ARN of the scale-in metric
+    :param arn_scaleout: ARN of the scale-out metric
+    :return: bool
+    """
     logger.info('Creating dataPlane CPU High CloudWatch alarm for ASG: ' + asg_name)
         
     alarmname= asg_name + '-cw-cpu'
@@ -167,12 +189,30 @@ def AddDataPlaneCPUUtilization(asg_name, arn_scalein, arn_scaleout):
 			alarmname, "DataPlane CPU Utilization", 'Percent')
 
 def DelDataPlaneCPUUtilization(asg_name):
+    """
+    Method to delete the DataPlaneCPUUtilization Alarm. This alarm
+    will trigger when the Data Plane CPU Utilization exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :return: None
+    """
     logger.info('Deleting dataPlane CPU High CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-cpu'
     common_alarm_func_del(alarmname)
     return
 
 def AddActiveSessions(asg_name, arn_scalein, arn_scaleout):
+    """
+    Method to create the ActiveSessions Alarm. This alarm
+    will trigger when the Active Sessions exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :param arn_scalein: ARN of the scale-in metric
+    :param arn_scaleout: ARN of the scale-out metric
+    :return: bool
+    """
     logger.info('Creating Active Sessions CloudWatch alarm for ASG: ' + asg_name)
 
     alarmname= asg_name + '-cw-as'
@@ -180,6 +220,12 @@ def AddActiveSessions(asg_name, arn_scalein, arn_scaleout):
 			alarmname, "Active Sessions", 'Count')
 
 def DelActiveSessions(asg_name):
+    """
+    Method to delete the Active Sessions alarm
+
+    :param asg_name: Name of the ASG
+    :return: None
+    """
     logger.info('Deleting Active Sessions CloudWatch alarm for ASG: ' + asg_name)
 
     alarmname= asg_name + '-cw-as'
@@ -187,54 +233,129 @@ def DelActiveSessions(asg_name):
     return
 
 def AddSessionUtilization(asg_name, arn_scalein, arn_scaleout):
+    """
+    Method to create the SessionUtilization Alarm. This alarm
+    will trigger when the SessionUtilization exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :param arn_scalein: ARN of the scale-in metric
+    :param arn_scaleout: ARN of the scale-out metric
+    :return: bool
+    """
     logger.info('Creating Session Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-su'
     return common_alarm_func_add(asg_name, "panSessionUtilization", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
 			alarmname, "Session Utilization", 'Percent')
 
 def DelSessionUtilization(asg_name):
+    """
+        Method to delete the Session Utilization alarm
+
+        :param asg_name: Name of the ASG
+        :return: None
+    """
     logger.info('Deleting Session Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-su'
     common_alarm_func_del(alarmname)
     return
 
 def AddGPGatewayUtilization(asg_name, arn_scalein, arn_scaleout):
+    """
+        Method to create the GPGatewayUtilization Alarm. This alarm
+        will trigger when the GPGatewayUtilization exceeds the
+        specified threshold.
+
+        :param asg_name: Name of the ASG
+        :param arn_scalein: ARN of the scale-in metric
+        :param arn_scaleout: ARN of the scale-out metric
+        :return: bool
+    """
     logger.info('Creating GP Gateway Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpu'
     return common_alarm_func_add(asg_name, "panGPGatewayUtilizationPct", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
 			alarmname, "GP Gateway Utilization", 'Percent')
 
 def DelGPGatewayUtilization(asg_name):
+    """
+    Method to delete the GP Session Utilization alarm
+
+    :param asg_name: Name of the ASG
+    :return: None
+    """
     logger.info('Deleting GP Gateway Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpu'
     common_alarm_func_del(alarmname)
     return
 
 def AddGPActiveTunnels(asg_name, arn_scalein, arn_scaleout):
+    """
+        Method to create the GPActiveTunnels Alarm. This alarm
+        will trigger when the GP Active Tunnels  exceeds the
+        specified threshold.
+
+        :param asg_name: Name of the ASG
+        :param arn_scalein: ARN of the scale-in metric
+        :param arn_scaleout: ARN of the scale-out metric
+        :return: bool
+    """
     logger.info('Creating GP Active Tunnels CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpat'
     return common_alarm_func_add(asg_name, "panGPGWUtilizationActiveTunnels", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
                         alarmname, "GP Gateway Utilization", 'Count')
 
 def DelGPActiveTunnels(asg_name):
+    """
+    Method to delete the GP GPActiveTunnels alarm
+    
+    :param asg_name: Name of the ASG
+    :return: None
+    """
+
     logger.info('Deleting GP Active Tunnels CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-gpat'
     common_alarm_func_del(alarmname)
     return
 
 def AddDataPlaneBufferUtilization(asg_name, arn_scalein, arn_scaleout):
+    """
+    Method to create the DataPlaneBufferUtilization Alarm. This alarm
+    will trigger when the DataPlaneBufferUtilization exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :param arn_scalein: ARN of the scale-in metric
+    :param arn_scaleout: ARN of the scale-out metric
+    :return: bool
+    """
     logger.info('Creating DP Buffer Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-dpb'
     return common_alarm_func_add(asg_name, "DataPlanePacketBufferUtilization", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
 			alarmname, "Data Plane Packet Buffer Utilization", 'Percent')
 
 def DelDataPlaneBufferUtilization(asg_name):
+    """
+    Method to delete the DatePlaneBufferUtilization  alarm
+
+    :param asg_name: Name of the ASG
+    :return: None
+    """
     logger.info('Deleting DP Packet Buffer Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-dpb'
     common_alarm_func_del(alarmname)
     return
 
 def AddSessionSslProxyUtilization(asg_name, arn_scalein, arn_scaleout):
+    """
+    Method to create the SessionSslProxyUtilization Alarm. This alarm
+    will trigger when the SessionSslProxyUtilization exceeds the
+    specified threshold.
+
+    :param asg_name: Name of the ASG
+    :param arn_scalein: ARN of the scale-in metric
+    :param arn_scaleout: ARN of the scale-out metric
+    :return: bool
+    """
     logger.info('Creating Session SSL Proxy  Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-sspu'
     return common_alarm_func_add(asg_name, "panGPGatewayUtilizationPct", lib.get_cw_name_space(stackname, asg_name), arn_scalein, arn_scaleout,
@@ -242,6 +363,12 @@ def AddSessionSslProxyUtilization(asg_name, arn_scalein, arn_scaleout):
     return
 
 def DelSessionSslProxyUtilization(asg_name):
+    """
+    Method to delete the SessionSslProxyUtilization alarm
+    
+    :param asg_name: Name of the ASG
+    :return: None
+    """
     logger.info('Deleting Session SSL Proxy Utilization CloudWatch alarm for ASG: ' + asg_name)
     alarmname= asg_name + '-cw-sspu'
     common_alarm_func_del(alarmname)
@@ -264,6 +391,18 @@ cw_func_del_alarms = {  'DataPlaneCPUUtilizationPct': DelDataPlaneCPUUtilization
                         'DataPlanePacketBufferUtilization': DelDataPlaneBufferUtilization}
 
 def create_asg_life_cycle(asg_name, AvailabilityZone):
+    """
+    Method to register ASG life cycle hook actions.
+
+
+    When and ASG lifecycle hook is triggered the targets as registered
+    by this method get triggered with the appropriate data fields.
+
+    :param asg_name: Name of the ASG.
+    :param AvailabilityZone: Name of the AZ
+    :param ip_address: IP address of the instance
+    :return: bool
+    """
     logger.info('Creating Life Cycle Hook for ASG: ' + asg_name)
     hookname=asg_name + '-life-cycle-launch'
     mgmt=lib.choose_subnet(subnetmgmt, AvailabilityZone)
@@ -300,6 +439,21 @@ def create_asg_life_cycle(asg_name, AvailabilityZone):
     return True
 
 def create_asg(AvailabilityZone):
+    """
+    Method to create an Auto Scale Group with the configuration
+    provided.
+
+    .. note:: This method performs the following critical functions
+
+       - reads in configuration from an S3 bucket
+       - creates a launch configuration
+       - creates an ASG
+       - associates the policies with the ASG
+       - registers to ASG life-cycle hook events and provides handlers for these events.
+
+    :param AvailabilityZone:
+    :return:
+    """
     lc_name= lib.get_lc_name(stackname, ELBTargetGroupName, AvailabilityZone)
 
     logger.info('Creating launch-config for a new ASG: ' + lc_name)
@@ -378,6 +532,14 @@ def create_asg(AvailabilityZone):
     return True
 
 def getAz(ip, response_ilb):
+    """
+    Method to return the availability zone that a
+    configured IP address belongs to.
+
+    :param ip:
+    :param response_ilb:
+    :return:
+    """
     for i in response_ilb['NetworkInterfaces']:
         logger.info('GetAz: Details about Internal Load Balancer')
         for k in i['PrivateIpAddresses']:
@@ -388,7 +550,15 @@ def getAz(ip, response_ilb):
     return None
 
 def check_and_send_message_to_queue(queue_url, str_message):
+    """
+    Method to retrieve the IP addresses that are configured on an
+    ILB.
 
+    :param event:
+    :param content:
+    :param response_ilb:
+    :return: str
+    """
     msg_str, msg_sent_timestamp, receipt_handle = lib.get_from_sqs_queue(queue_url, 20, 5)
 
     if not msg_str:
@@ -410,6 +580,25 @@ def check_and_send_message_to_queue(queue_url, str_message):
         logger.info('Message in queue is still current.')
 
 def firewall_asg_update(event, context):
+    """
+    Method to monitor the asg in the supported AZs.
+
+    The actions performed by this function are:
+        - if asg doesn't exist, create asg. 
+        - Before create asg, it will remove the launch config if exists.
+          Then create new launch config.
+    :param event: Encodes all the input variables to the lambda function, when
+                  the function is invoked.
+                  Essentially AWS Lambda uses this parameter to pass in event
+                  data to the handler function.
+    :type event: dict
+
+    :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+    :type context: LambdaContext
+
+    :return: None
+    """
+
     print("Firewall ASG update Time remaining (MS):", context.get_remaining_time_in_millis())
     for i in fw_azs:
         search = lib.get_asg_name(stackname, ELBTargetGroupName, i)
@@ -436,6 +625,25 @@ def firewall_asg_update(event, context):
     print("Time remaining return firewall_asg_update (MS):", context.get_remaining_time_in_millis())
 
 def network_load_balancer_update(event, context):
+    """
+    Method to monitor NLB sqs and update firewall nat rules
+
+    The actions performed by this function are:
+        - find all firewalls of COMMIT state in firewall table and apply
+          nat rules of all NLB IPs in NLB table
+        - read new msg from NLB sqs and update nlb table and firewall rules
+
+    :param event: Encodes all the input variables to the lambda function, when
+                  the function is invoked.
+                  Essentially AWS Lambda uses this parameter to pass in event
+                  data to the handler function.
+    :type event: dict
+
+    :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+    :type context: LambdaContext
+
+    :return: None
+    """
     print("NLB update Time remaining (MS):", context.get_remaining_time_in_millis())   
     logger.info('Running network load balancer update')
     fwcontext = lib.get_ssl_context()
@@ -501,6 +709,7 @@ def network_load_balancer_update(event, context):
         logger.exception("Exception occurred while processing firewalls in commit: {}".format(e))
 
     #Retrieve message from NLB queue
+    pre_port = -1
     fw_update = False
     for read in xrange(0, 10):
         try:
@@ -526,9 +735,21 @@ def network_load_balancer_update(event, context):
                     nlb_azs = message_data['AVAIL-ZONES']
                     total_nlb_az = len(nlb_azs)
                     nlb_port = lib.nlb_table_get_next_avail_port(stackname, region)
+                    for wait in xrange(0, 20):
+                        if pre_port == nlb_port and pre_port != 0:
+                            time.sleep(0.05)
+                        else:
+                            pre_port = nlb_port
+                            break
+                    if wait == 20:
+                        logger.error("Get next available port returns the same port %d, skip adding nlb %s", nlb_port, nlb_name)
+                        continue
+                    else:
+                        logger.info("Wait for syncing dynamodb sleep count %d", wait)
+  
                     if nlb_port == 0:
-                        logger.error("All ports number(%d-%d) has been used. Please deleting old network load balancer before adding more", 
-                                    start_nlb_port, num_nlb_port+start_nlb_port-1)
+                        logger.error("All ports number(%d-%d) has been used. Please deleting old network load balancer before adding more, skip adding nlb %s", 
+                                    start_nlb_port, num_nlb_port+start_nlb_port-1, nlb_name)
                         continue
                     if total_nlb_az >= total_fw_az:
                         for index,item in enumerate(nlb_azs):
@@ -550,7 +771,6 @@ def network_load_balancer_update(event, context):
                                     logger.error('Config firewall NAT rule failed for instance %s, ip %s, NLB-port %d', fw['InstanceID'], fw['MgmtIP'], nlb_port)
                                     lib.firewall_table_update_state(stackname, region, fw['InstanceID'], 'COMMIT')
                             
-                            #check return errors later@@@@
                             logger.info("Add NLB entry IP %s, Port %d in COMMIT state", nlb_ip, nlb_port) 
                             lib.nlb_table_add_entry(stackname, region, nlb_ip, nlb_port, 'COMMIT', nlb_zone_name, nlb_subnet_id, total_nlb_az, index, dns_name, nlb_name)
                     else:
@@ -568,7 +788,6 @@ def network_load_balancer_update(event, context):
                                     logger.error('Config firewall NAT rule failed for instance %s, ip %s, NLB-port %d', fw['InstanceID'], fw['MgmtIP'], nlb_port)
                                     lib.firewall_table_update_state(stackname, region, fw['InstanceID'], 'COMMIT')
                             
-                            #check return errors later@@@@
                             if index < total_nlb_az:
                                     lib.nlb_table_add_entry(stackname, region, nlb_ip, nlb_port, 'COMMIT', nlb_zone_name, nlb_subnet_id, total_nlb_az, index, dns_name, nlb_name)
                 elif nlb_type == 'DEL-NLB':
@@ -614,7 +833,7 @@ def network_load_balancer_update(event, context):
 
             # Find all the nlb in commit state
             nlb_response=lib.nlb_table_get_all_in_state(stackname, region, 'COMMIT')
-            print('@@@nlb_response count: {}'.format(nlb_response['Count']))
+            print('nlb_response count: {}'.format(nlb_response['Count']))
 
             for nlb in nlb_response['Items']:
                 nlb_port = nlb['TCPPort']
@@ -641,6 +860,21 @@ def network_load_balancer_update(event, context):
 
 
 def firewall_init_config(event, context):
+    """
+    Method to monitor the firewall of INIT state in firewall table and set state
+    to COMMIT if firewall auto commit completes
+
+    :param event: Encodes all the input variables to the lambda function, when
+                  the function is invoked.
+                  Essentially AWS Lambda uses this parameter to pass in event
+                  data to the handler function.
+    :type event: dict
+
+    :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+    :type context: LambdaContext
+
+    :return: None
+    """
     print("firewall_init_config Time remaining (MS):", context.get_remaining_time_in_millis())   
     
     #Get all firewall instance in INIT state
@@ -656,10 +890,9 @@ def firewall_init_config(event, context):
                 lib.is_firewall_auto_commit_done(fwcontext, fw['MgmtIP'],KeyPANWFirewall)
             else:
                 # Configure firewall and push NAT rules
-                if lib.config_firewall_cloudwatch_name(fwcontext, fw['MgmtIP'], KeyPANWFirewall,fw['AsgName']) == False:
-                    logger.error('Config firewall cloudwatch name failed')
+                if lib.config_firewall_init_setting(fwcontext, fw['MgmtIP'], KeyPANWFirewall,fw['AsgName'], fw['UntrustIP']) == False:
+                    logger.error('Config firewall init setting failed')
                 else:
-                    #@@@ check error later
                     lib.firewall_table_update_state(stackname, region, fw['InstanceID'], 'COMMIT')
         except Exception as e:
             logger.exception("Exception occurred while checking if firewall is ready: {}".format(e))
@@ -667,6 +900,40 @@ def firewall_init_config(event, context):
     print("Time remaining return firewall_init_config (MS):", context.get_remaining_time_in_millis())
         
 def lambda_handler(event, context):
+    """
+    .. note:: This function is the entry point for the ```sched_event1``` Lambda function.
+
+    This function performs the following actions:
+    firewall_asg_update(event, context)
+    firewall_init_config(event, context)
+    network_load_balancer_update(event, context)
+
+        | invokes ```check_and_send_message_to_queue()```
+        |  desc: Checks the messages on the queue to ensure its up to date
+        |        and for any changes as the case maybe.
+
+        | invokes ```firewall_asg_update()```
+        |  desc: monitor firewall asg and create asg if not exist
+
+        | invokes ```firewall_init_config()```
+        |  desc: monitor firewall in INIT state and move it to COMMIT if 
+        |        firewall auto commit is done
+
+        | invokes ```network_load_balancer_update()```
+        |  desc: update firewall nat rules based on info in firewall table
+        |        nlb table
+
+    :param event: Encodes all the input variables to the lambda function, when
+                  the function is invoked.
+                  Essentially AWS Lambda uses this parameter to pass in event
+                  data to the handler function.
+    :type event: dict
+
+    :param context: AWS Lambda uses this parameter to provide runtime information to your handler.
+    :type context: LambdaContext
+
+    :return: None
+    """
     global stackname
     global ilb_tag
     global elb_name
