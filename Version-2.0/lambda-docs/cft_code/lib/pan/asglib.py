@@ -39,7 +39,7 @@ import ssl
 import xml.etree.ElementTree as et
 from httplib import HTTPSConnection
 #import ssl
-from boto3.dynamodb.conditions import Key, Attr
+#from boto3.dynamodb.conditions import Key, Attr
 
 
 logger = logging.getLogger()

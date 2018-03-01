@@ -37,7 +37,7 @@ import sys
 import urllib
 import hashlib
 import base64
-from boto3.dynamodb.conditions import Key, Attr
+#from boto3.dynamodb.conditions import Key, Attr
 
 sys.path.append('lib/')
 import pan.asglib as lib
