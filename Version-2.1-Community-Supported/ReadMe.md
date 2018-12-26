@@ -17,11 +17,11 @@ This architecture uses a load balancer sandwich for protecting Internet facing a
 # Documentation
 Use of version 2.1 is recommended only for those users already familar with the existing auto scaling solution (version 2.1). This initial release is meant to provide an early-release version of the separate VPC's capability.
 * Overview steps
-1. Deploy Panorama
-2. Setup Panorama Device Group and Template Stack
-3. Prepare bootstrap files
-4. Upload Lambda functions
-5. Deploy auto scaling CFTs
+  1. Deploy Panorama
+  2. Setup Panorama Device Group and Template Stack
+  3. Prepare bootstrap files
+  4. Upload Lambda functions
+  5. Deploy auto scaling CFTs
 * More detailed set of deployment steps are available here (coming soon). Complete documentation, similar to earlier versions, will be available when version 2.1 is released.
 
 # Support Policy: Community-Supported aka Best Effort
