@@ -1,4 +1,4 @@
-# Auto Scaling VM-Series firewalls in AWS
+# Auto Scaling VM-Series firewalls in AWS Version 2.1-CS
 Version 2.1-CS Community supported release
 
 Note: The initial release of version 2.1-CS of the Auto Scaling VM-Series firewalls in AWS is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
