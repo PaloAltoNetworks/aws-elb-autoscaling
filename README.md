@@ -8,8 +8,8 @@ To protect outbound traffic flows, hybrid architectures that connect AWS to on-p
 ### Version 1.0 - Mar 2017
 ### Version 2.0 - Jan 2018
 ### Version 2.0.1 - Nov 2018, bug fixes
-### Version 2.1 - Jan 2018, Community supported aka best-effort release
+### Version 2.1-CS - Jan 2018, Community supported aka best-effort release
 * Support for separating the frontend firewall VPC from the backend application VPC using AWS PrivateLink or VPC peering
 * Support for specific combinations of external and internal load balancing
 
-The initial release of version 2.1 is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
+The initial release of version 2.1-CS is provided as a community supported, i.e. best effort, release. You can consider this as an open beta to introduce new features and collect feedback for improving the generally available release that will be officially supported.
