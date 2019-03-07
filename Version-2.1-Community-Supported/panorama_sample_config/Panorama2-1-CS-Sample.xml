@@ -87,14 +87,14 @@
                 <vsys>
                   <entry name="vsys1">
                     <zone>
-                      <entry name="Untrust">
+                      <entry name="untrust">
                         <network>
                           <layer3>
                             <member>ethernet1/1</member>
                           </layer3>
                         </network>
                       </entry>
-                      <entry name="Trust">
+                      <entry name="trust">
                         <network>
                           <layer3>
                             <member>ethernet1/2</member>
@@ -232,10 +232,10 @@
                     <negate>no</negate>
                   </target>
                   <to>
-                    <member>Trust</member>
+                    <member>trust</member>
                   </to>
                   <from>
-                    <member>Untrust</member>
+                    <member>untrust</member>
                   </from>
                   <source>
                     <member>any</member>
@@ -267,10 +267,10 @@
                     <negate>no</negate>
                   </target>
                   <to>
-                    <member>Untrust</member>
+                    <member>untrust</member>
                   </to>
                   <from>
-                    <member>Trust</member>
+                    <member>trust</member>
                   </from>
                   <source>
                     <member>any</member>
@@ -324,10 +324,10 @@
                   <vsys>
                     <entry name="vsys1">
                       <zone>
-                        <entry name="Untrust">
+                        <entry name="untrust">
                           <id>13</id>
                         </entry>
-                        <entry name="Trust">
+                        <entry name="trust">
                           <id>14</id>
                         </entry>
                       </zone>
