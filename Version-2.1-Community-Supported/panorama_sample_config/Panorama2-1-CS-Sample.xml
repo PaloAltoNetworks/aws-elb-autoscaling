@@ -12,7 +12,6 @@
         </permissions>
       </entry>
       <entry name="pandemo">
-        <public-key></public-key>
         <permissions>
           <role-based>
             <superuser>yes</superuser>
@@ -52,7 +51,7 @@
               <accept-dhcp-domain>no</accept-dhcp-domain>
             </dhcp-client>
           </type>
-          <hostname>jppanormaAWS21</hostname>
+          <hostname>AutoScale2-1-Sample</hostname>
         </system>
         <setting>
           <management>
@@ -69,9 +68,8 @@
                   <accept-dhcp-domain>no</accept-dhcp-domain>
                 </dhcp-client>
               </type>
-              <hostname>jppanormaAWS21</hostname>
+              <hostname>AutoScale2-1-Sample</hostname>
               <username>pandemo</username>
-              <public-key></public-key>
             </initcfg>
           </management>
         </setting>
