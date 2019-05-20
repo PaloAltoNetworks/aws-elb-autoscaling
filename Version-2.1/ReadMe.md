@@ -14,7 +14,7 @@ This architecture uses a load balancer sandwich for protecting Internet facing a
 **Single-VPC**  
 ![alt text](/Version-2.1/cft_elb21_SingleVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in a SingleVPC on AWS Version 2.1")  
 
-**Multi-VPC** 
+**Multi-VPC**  
 ![alt text](/Version-2.1/cft_elb21_MultiVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in MultiVPC on AWS Version 2.1")
 
 # Features
