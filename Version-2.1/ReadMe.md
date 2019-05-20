@@ -3,17 +3,18 @@
 # Auto Scaling VM-Series firewalls on AWS Version 2.1
 
 Version 2.1 Firewall Template GA release
-Version 2.1 Application Template Community supported release
 
 # Overview
 This release enables a clear separation of the firewall VPC's from the application VPC's. This separation allows security teams to offer firewall-as-a-service to their internal teams such as line of business, application developers and DevOps who build, ship and run applications (called "application teams" here). This enables separate billing and management of each. In addition, security and application teams can put specific restrictions such as tight security groups, no IGW etc on the application VPC's for a stronger security posture, and leave all security of inbound traffic to the security team. Enforcement of these policy-based capabilities on the application VPC's can be easily done through services such as [RedLock](https://www.paloaltonetworks.com/redlock), while VM-Series provides the network security protections and visibility. Also, as the number of protected application VPC's grow, security teams can use the auto scaling stack of firewalls for elastic, on-demand, security. Each application (via its related internal load balancer) are mapped to a load balancing rule in the external load balancer.
 
 This architecture uses a load balancer sandwich for protecting Internet facing applications, for other use cases, see https://github.com/PaloAltoNetworks/aws-elb-autoscaling
 
-**Single-VPC**  
-![alt text](/Version-2.1/cft_elb21_SingleVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in a SingleVPC on AWS Version 2.1")
+# Topology
 
-**Multi-VPC**  
+**Single-VPC**  
+![alt text](/Version-2.1/cft_elb21_SingleVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in a SingleVPC on AWS Version 2.1")  
+
+**Multi-VPC** 
 ![alt text](/Version-2.1/cft_elb21_MultiVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in MultiVPC on AWS Version 2.1")
 
 # Features
