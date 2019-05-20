@@ -25,8 +25,8 @@ This architecture uses a load balancer sandwich for protecting Internet facing a
 # Documentation
 Use of version 2.1 is recommended only for those users already familar with the existing auto scaling solution (version 2.1). T
 
-The deployment guide can be found
-[here](https://github.com/PaloAltoNetworks/aws-elb-autoscaling/blob/master/Version-2.1/set-up-the-vm-series-firewall-on-aws-v9)
+The deployment guide can be found [here](
+https://github.com/PaloAltoNetworks/aws-elb-autoscaling/blob/master/Version-2.1/set-up-the-vm-series-firewall-on-aws-v9.pdf)
 
 # Support Policy: 
 **The Firewall Template is a GA Release & Officially Supported** 
