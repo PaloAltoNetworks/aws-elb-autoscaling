@@ -10,8 +10,8 @@ This release enables a clear separation of the firewall VPC's from the applicati
 
 This architecture uses a load balancer sandwich for protecting Internet facing applications, for other use cases, see https://github.com/PaloAltoNetworks/aws-elb-autoscaling
 
-![alt text](/Version-2.1/cft_elb21SingleVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls on AWS Version 2.1")
-![alt text](/Version-2.1/cft_elb21MultiVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls on AWS Version 2.1")
+![alt text](/Version-2.1/cft_elb21_SingleVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in a SingleVPC on AWS Version 2.1")
+![alt text](/Version-2.1/cft_elb21_MultiVPC.png?raw=true "Topology for the Auto Scaling VM-Series Firewalls in MultiVPC on AWS Version 2.1")
 
 # Features
 * Support for separating the frontend firewall VPC from the backend application VPC using AWS PrivateLink or VPC peering.
@@ -22,7 +22,7 @@ This architecture uses a load balancer sandwich for protecting Internet facing a
 Use of version 2.1 is recommended only for those users already familar with the existing auto scaling solution (version 2.1). T
 
 The deployment guide can be found [here](
-set-up-the-vm-series-firewall-on-aws-v9)
+https://github.com/PaloAltoNetworks/aws-elb-autoscaling/blob/master/Version-2.1/set-up-the-vm-series-firewall-on-aws-v9)
 
 # Support Policy: 
 **The Firewall Template is a GA Release & Officially Supported** 
