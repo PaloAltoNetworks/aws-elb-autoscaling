@@ -7,7 +7,7 @@ Version 2.1 Firewall Template GA release
 # Overview
 This release enables a clear separation of the firewall VPC's from the application VPC's. This separation allows security teams to offer firewall-as-a-service to their internal teams such as line of business, application developers and DevOps who build, ship and run applications (called "application teams" here). This enables separate billing and management of each. In addition, security and application teams can put specific restrictions such as tight security groups, no IGW etc on the application VPC's for a stronger security posture, and leave all security of inbound traffic to the security team. Enforcement of these policy-based capabilities on the application VPC's can be easily done through services such as [RedLock](https://www.paloaltonetworks.com/redlock), while VM-Series provides the network security protections and visibility. Also, as the number of protected application VPC's grow, security teams can use the auto scaling stack of firewalls for elastic, on-demand, security. Each application (via its related internal load balancer) are mapped to a load balancing rule in the external load balancer.
 
-This architecture uses a load balancer sandwich for protecting Internet facing applications, for other use cases, see https://github.com/PaloAltoNetworks/aws-elb-autoscaling
+This architecture uses a load balancer sandwich for protecting Internet facing applications, for other use cases click [here]( https://github.com/PaloAltoNetworks/aws-elb-autoscaling)
 
 # Topology
 
