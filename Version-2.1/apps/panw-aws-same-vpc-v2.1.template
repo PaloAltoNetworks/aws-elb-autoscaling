@@ -1,0 +1,602 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates an AWS  Load balancer, which multiplexes traffic to registered scaled out back end web servers",
+  "Parameters": {
+    "InstanceType": {
+      "Description": "WebServer EC2 instance type",
+      "Type": "String",
+      "Default": "t2.medium",
+      "AllowedValues": [
+        "t1.micro",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "m1.large",
+        "m3.xlarge",
+        "c4.2xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+    "KeyName" : {
+       "Description" : "Amazon EC2 Key Pair",
+       "Type" : "AWS::EC2::KeyPair::KeyName"
+    },
+    "SSHLocation" : {
+      "Description" : "Restrict SSH access to the VM-Series firewall. Recommend to specify IP / CIDR of the VPC.",
+      "Type" : "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "VpcAzs": {
+      "Type": "List<AWS::EC2::AvailabilityZone::Name>",
+      "Description": "Enter the list of Availability Zones (Based on Number of AZs above). \n Required for the deployment of the backend application"
+    },
+    "NumberOfAZs": {
+        "Description" : "Total Number of AZs which will be used in this deployment (Min 2 and Max 4 depending on az availability)",
+        "Type" : "Number",
+        "MinValue" : "2",
+        "Default" : "2",
+        "MaxValue" : "4"
+    },    
+    "VPCCIDR": {
+      "Type": "String",
+      "Default": "192.168.0.0/16",
+      "Description": "Enter the VPC CIDR that you want to use",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "VPCID": {
+        "Type": "AWS::EC2::VPC::Id",
+        "Description": "VPC ID to be deployed into"
+    },
+    "SubnetIDs": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Enter the Subnet IDs that are to be leveraged"
+    },
+    "ILBName": {
+      "Type" : "String",
+      "Description": "Enter the name to associate with the ILB",
+      "Default": "prot-ilb",
+      "MinLength" : "3",
+      "MaxLength" : "120"
+    },
+    "ILBType": {
+      "Type": "String",
+      "Default": "application",
+      "AllowedValues": [
+        "application",
+        "network"
+      ],
+      "Description": "Choose the type of load balancer required in the application template"
+    },    
+    "QueueURL": {
+      "Type" : "String",
+      "Description": "Enter the URL of the Queue to send ILB updates to",
+      "MinLength" : "3",
+      "MaxLength" : "1024"
+    },
+    "S3BucketName": {
+      "Type" : "String",
+      "Description": "Enter the name S3 Bucket Name which contains the template and lambda code",
+      "MinLength" : "3",
+      "MaxLength" : "120"
+    },
+    "LambdaZipFileName": {
+      "Type" : "String",
+      "Description": "Enter the name of the S3 object which contains the lambda function code",
+      "MinLength" : "3",
+      "MaxLength" : "120"
+    }
+  },
+  "Mappings" : {
+    "Constants": {
+      "S3URL": {
+         "URL1": "https://s3.amazonaws.com"
+      }
+    },
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "PV64"   },
+      "t2.micro"    : { "Arch" : "HVM64"  },
+      "t2.small"    : { "Arch" : "HVM64"  },
+      "t2.medium"   : { "Arch" : "HVM64"  },
+      "m1.small"    : { "Arch" : "PV64"   },
+      "m1.medium"   : { "Arch" : "PV64"   },
+      "m1.large"    : { "Arch" : "PV64"   },
+      "m1.xlarge"   : { "Arch" : "PV64"   },
+      "m2.xlarge"   : { "Arch" : "PV64"   },
+      "m2.2xlarge"  : { "Arch" : "PV64"   },
+      "m2.4xlarge"  : { "Arch" : "PV64"   },
+      "m3.medium"   : { "Arch" : "HVM64"  },
+      "m3.large"    : { "Arch" : "HVM64"  },
+      "m3.xlarge"   : { "Arch" : "HVM64"  },
+      "m3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c1.medium"   : { "Arch" : "PV64"   },
+      "c1.xlarge"   : { "Arch" : "PV64"   },
+      "c3.large"    : { "Arch" : "HVM64"  },
+      "c3.xlarge"   : { "Arch" : "HVM64"  },
+      "c3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c3.4xlarge"  : { "Arch" : "HVM64"  },
+      "c3.8xlarge"  : { "Arch" : "HVM64"  },
+      "c4.large"    : { "Arch" : "HVM64"  },
+      "c4.xlarge"   : { "Arch" : "HVM64"  },
+      "c4.2xlarge"  : { "Arch" : "HVM64"  },
+      "c4.4xlarge"  : { "Arch" : "HVM64"  },
+      "c4.8xlarge"  : { "Arch" : "HVM64"  },
+      "g2.2xlarge"  : { "Arch" : "HVMG2"  },
+      "r3.large"    : { "Arch" : "HVM64"  },
+      "r3.xlarge"   : { "Arch" : "HVM64"  },
+      "r3.2xlarge"  : { "Arch" : "HVM64"  },
+      "r3.4xlarge"  : { "Arch" : "HVM64"  },
+      "r3.8xlarge"  : { "Arch" : "HVM64"  },
+      "i2.xlarge"   : { "Arch" : "HVM64"  },
+      "i2.2xlarge"  : { "Arch" : "HVM64"  },
+      "i2.4xlarge"  : { "Arch" : "HVM64"  },
+      "i2.8xlarge"  : { "Arch" : "HVM64"  },
+      "d2.xlarge"   : { "Arch" : "HVM64"  },
+      "d2.2xlarge"  : { "Arch" : "HVM64"  },
+      "d2.4xlarge"  : { "Arch" : "HVM64"  },
+      "d2.8xlarge"  : { "Arch" : "HVM64"  },
+      "hi1.4xlarge" : { "Arch" : "HVM64"  },
+      "hs1.8xlarge" : { "Arch" : "HVM64"  },
+      "cr1.8xlarge" : { "Arch" : "HVM64"  },
+      "cc2.8xlarge" : { "Arch" : "HVM64"  }
+    },
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"PV64" : "ami-1ccae774", "HVM64" : "ami-1ecae776", "HVMG2" : "ami-8c6b40e4"},
+      "us-east-2"        : {"PV64" : "NOT_SUPPORTED", "HVM64" : "ami-c55673a0", "HVMG2" : "NOT_SUPPORTED"},
+      "us-west-2"        : {"PV64" : "ami-ff527ecf", "HVM64" : "ami-e7527ed7", "HVMG2" : "ami-abbe919b"},
+      "us-west-1"        : {"PV64" : "ami-d514f291", "HVM64" : "ami-d114f295", "HVMG2" : "ami-f31ffeb7"},
+      "eu-west-1"        : {"PV64" : "ami-bf0897c8", "HVM64" : "ami-a10897d6", "HVMG2" : "ami-d5bc24a2"},
+      "eu-central-1"     : {"PV64" : "ami-ac221fb1", "HVM64" : "ami-a8221fb5", "HVMG2" : "ami-7cd2ef61"},
+      "ap-northeast-1"   : {"PV64" : "ami-27f90e27", "HVM64" : "ami-cbf90ecb", "HVMG2" : "ami-6318e863"},
+      "ap-southeast-1"   : {"PV64" : "ami-acd9e8fe", "HVM64" : "ami-68d8e93a", "HVMG2" : "ami-3807376a"},
+      "ap-southeast-2"   : {"PV64" : "ami-ff9cecc5", "HVM64" : "ami-fd9cecc7", "HVMG2" : "ami-89790ab3"},
+      "sa-east-1"        : {"PV64" : "ami-bb2890a6", "HVM64" : "ami-b52890a8", "HVMG2" : "NOT_SUPPORTED"},
+      "cn-north-1"       : {"PV64" : "ami-fa39abc3", "HVM64" : "ami-f239abcb", "HVMG2" : "NOT_SUPPORTED"},
+      "eu-west-2"        : {"PV64" : "NOT_SUPPORTED", "HVM64" : "ami-1a7f6d7e", "HVMG2" : "NOT_SUPPORTED"},
+      "ca-central-1"     : {"PV64" : "NOT_SUPPORTED", "HVM64" : "ami-fd55ec99", "HVMG2" : "NOT_SUPPORTED"},
+      "ap-south-1"       : {"PV64" : "NOT_SUPPORTED", "HVM64" : "ami-4fc58420", "HVMG2" : "NOT_SUPPORTED"},
+      "ap-northeast-2"   : {"PV64" : "NOT_SUPPORTED", "HVM64" : "ami-249b554a", "HVMG2" : "NOT_SUPPORTED"}
+    }
+  },
+  "Conditions" : {
+    "CreateSubnet2" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "2"]},
+    "CreateSubnet3" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "3"]},   
+    "CreateSubnet3more" : { "Fn::Or": [ {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "3"]}, {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "4"]}]},
+    "CreateSubnet4" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "4"]},  
+    "CreateILBTypeApp" : {"Fn::Equals" : [{"Ref" : "ILBType"}, "application"]},
+    "CreateILBTypeNet" : {"Fn::Equals" : [{"Ref" : "ILBType"}, "network"]}    
+  },  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+        "ParameterGroups" : [
+            {
+                "Label": {"default": "VPC Section"},
+                "Parameters": ["NumberOfAZs", "VpcAzs", "VPCCIDR", "VPCID", "SubnetIDs"]
+            },
+            {
+                "Label": {"default": "Load Balancer Section"},
+                "Parameters": ["ILBName", "ILBType"]
+            },
+            {
+                "Label": {"default": "Lambda Section"},
+                "Parameters": [ "S3BucketName", "LambdaZipFileName",
+                                "QueueURL"
+                              ]
+            },
+            {
+                "Label": {"default": "Application Section"},
+                "Parameters": ["InstanceType"]
+            },
+            {
+                "Label": {"default": "Access Section"},
+                "Parameters": ["KeyName", "SSHLocation"]
+            }
+        ],
+        "ParameterLabels" : {
+            "VPCName": {"default": "VPC Name:"},
+            "VPCCIDR": {"default": "CIDR Block for the VPC:"},
+            "MgmtSubnetIpBlocks": {"default": "Management Subnet CIDR Block:"},
+            "InstanceType": {"default": "Instance Type of Web Servers behind ILB:"},
+            "KeyName": {"default": "Key pair:"},
+            "SSHLocation": {"default": "SSH From:"},
+            "VpcAzs": {"default": "Select list of AZ:"},
+            "NumberOfAZs": {"default": "Number of AZ for deployment:"},
+            "S3BucketName": {"default": "S3 Bucket Name:"},
+            "LambdaZipFileName": {"default": "Lambda Zip File Name:"},
+            "QueueURL": {"default": "SQS Queue URL:"},
+            "ILBName": {"default": "ILB Name:"},
+            "ILBType": {"default": "ILB Type:"},
+            "VPCCIDR": {"default": "VPC CIDR:"},
+            "InstanceType": {"default": "Instance Type of Web Servers behind ILB:"},
+            "VPCID": {"default": "VPC ID:"},
+            "SubnetIDs": {"default": "Subnet IDs:"}
+      }
+    }
+  },
+  "Resources": {
+    "InternalLoadBalancerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Internal Load Balancer Security Group with HTTP access on port 80 from the internet",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "InternalLoadBalancerSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [
+                {
+                    "IpProtocol" : "-1",
+                    "FromPort" : "-1",
+                    "ToPort" : "-1",
+                    "CidrIp" : { "Ref": "VPCCIDR"}                                                                                                                              
+                }
+         ]
+      },
+    },
+    "InternalLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties" : {
+        "Name" : { "Ref" : "ILBName" },
+        "Subnets" : { "Fn::If" : [ "CreateSubnet2", [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] } ], 
+          {"Fn::If" : ["CreateSubnet3", [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "SubnetIDs"} ] } ], 
+                  [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "SubnetIDs"} ] },  { "Fn::Select" : [ "3", {"Ref" : "SubnetIDs"} ] } ] ] } ] },
+        "Scheme" : "internal",
+        "Type": { "Ref" : "ILBType" },
+        "SecurityGroups": [ {"Fn::If" : ["CreateILBTypeApp", {"Ref" : "InternalLoadBalancerSecurityGroup"}, {"Ref" : "AWS::NoValue"}]} ]
+      },
+      "DependsOn": [ "InternalLoadBalancerSecurityGroup" ]
+    },
+    "WebServerLaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment" : "Install a simple application",
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "httpd" : []
+              }
+            },
+
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : ["\n", [
+                  "<img src=\"https://www.paloaltonetworks.com/content/dam/pan/en_US/images/logos/brand/pan-logo-badge-blue-medium-kick-up.png\" alt=\"VM-Series CloudFormation\" width=\"200\"/>",
+                  "<h1>Congratulations, you have successfully launched VM-Series ASG CloudFormation. This file is coming from Webserver Region:", { "Ref" : "AWS::Region" }, "</h1>",
+                  "<h1>StackID: ", { "Ref" : "AWS::StackId" }, "</h1>",
+                  "<h1>StackName: ", { "Ref" : "AWS::StackName" }, "</h1>",
+                  "<h1>AccountID: ", { "Ref" : "AWS::AccountId" }, "</h1>",
+                  "<h1>This templates creates - VPC, Subnets, Route Tables, Webservers ASG, Lambda Infra </h1>"
+                ]]},
+                "mode"    : "000644",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+                "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource LaunchConfig ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            },
+
+            "services" : {
+              "sysvinit" : {
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
+                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
+                              "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]}
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "KeyName" : { "Ref" : "KeyName" },
+        "AssociatePublicIpAddress" : "true",
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "SecurityGroups" : [ { "Ref" : "WebServerSecurityGroup" } ],
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+             "#!/bin/bash -xe\n",
+             "yum update -y aws-cfn-bootstrap\n",
+
+             "/opt/aws/bin/cfn-init -v ",
+             "         --stack ", { "Ref" : "AWS::StackName" },
+             "         --resource WebServerLaunchConfig",
+             "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+             "# Signal completion\n",
+             "/opt/aws/bin/cfn-signal -e $? ",
+             "  --stack ", { "Ref": "AWS::StackName" },
+             "  --resource WebServerGroup" ,
+             "  --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription" : "Allow access from HTTP and SSH traffic",
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "WebServerSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": { "Ref" : "SSHLocation" }
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp": { "Ref" : "VPCCIDR" }
+          }
+        ]
+     }
+    },
+    "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn" : [ "WebServerLaunchConfig" ],
+      "Properties" : {
+        "AvailabilityZones" :  { "Fn::If" : [ "CreateSubnet2", [ { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] } ], 
+          {"Fn::If" : ["CreateSubnet3", [ { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] } ], 
+                  [ { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },  { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] } ] ] } ] },
+        "LaunchConfigurationName" : { "Ref" : "WebServerLaunchConfig" },
+        "MinSize" : "2",
+        "MaxSize" : "6",
+        "TargetGroupARNs" : [ { "Ref" : "WebServerTargetGroup" } ],
+        "VPCZoneIdentifier": { "Fn::If" : [ "CreateSubnet2", [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] } ], 
+          {"Fn::If" : ["CreateSubnet3", [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "SubnetIDs"} ] } ], 
+                  [ { "Fn::Select" : [ "0", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "1", {"Ref" : "SubnetIDs"} ] }, { "Fn::Select" : [ "2", {"Ref" : "SubnetIDs"} ] },  { "Fn::Select" : [ "3", {"Ref" : "SubnetIDs"} ] } ] ] } ] },
+        "Tags": [
+                {
+                    "ResourceType": "auto-scaling-group",
+                    "ResourceId": "WebServerGroup",
+                    "PropagateAtLaunch": true,
+                    "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "WebServerGroup" ] ] },
+                    "Key": "Name"
+                }
+        ]
+      } 
+    },
+    "WebServerTargetGroup": {
+       "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+       "Properties" : {
+             "Port" : "80",
+             "Protocol" : { "Fn::If" : [ "CreateILBTypeApp", "HTTP", "TCP"]},
+             "UnhealthyThresholdCount" : "3",
+             "VpcId" : { "Ref" : "VPCID" }
+       }
+    },
+    "WebServerListener": {
+       "Type" : "AWS::ElasticLoadBalancingV2::Listener",
+       "Properties" : {
+         "DefaultActions" : [{
+           "Type": "forward",
+           "TargetGroupArn": { "Ref": "WebServerTargetGroup" }
+            }],
+         "LoadBalancerArn" : {"Ref" : "InternalLoadBalancer"},
+         "Port" : "80",
+         "Protocol" : { "Fn::If" : [ "CreateILBTypeApp", "HTTP", "TCP"]}
+        },
+        "DependsOn": ["WebServerTargetGroup", "InternalLoadBalancer"]
+    },
+    "LambdaExecutionRole0" : {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [ {
+                 "Effect": "Allow",
+                 "Principal": {
+                    "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              } ]
+            },
+            "Path":"/",
+            "Policies": [ {
+              "PolicyName": "LambdaExecutionRolePolicy",
+              "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:ListBucket",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", {"Ref": "S3BucketName" }, "/*" ] ] }
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "S3BucketName" }, "/*" ] ] }
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "ec2:DescribeSubnets",
+                        "ec2:DescribeVpcs"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "events:*"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "cloudwatch:*"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "lambda:AddPermission",
+                        "lambda:CreateEventSourceMapping",
+                        "lambda:CreateFunction",
+                        "lambda:DeleteEventSourceMapping",
+                        "lambda:DeleteFunction",
+                        "lambda:GetEventSourceMapping",
+                        "lambda:ListEventSourceMappings",
+                        "lambda:RemovePermission",
+                        "lambda:UpdateEventSourceMapping",
+                        "lambda:UpdateFunctionCode",
+                        "lambda:UpdateFunctionConfiguration",
+                        "lambda:GetFunction",
+                        "lambda:ListFunctions"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "sqs:ReceiveMessage",
+                        "sqs:SendMessage",
+                        "sqs:SetQueueAttributes",
+                        "sqs:PurgeQueue"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "elasticloadbalancing:AddTags",
+                        "elasticloadbalancing:AttachLoadBalancerToSubnets",
+                        "elasticloadbalancing:ConfigureHealthCheck",
+                        "elasticloadbalancing:DescribeInstanceHealth",
+                        "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                        "elasticloadbalancing:DescribeLoadBalancerPolicyTypes",
+                        "elasticloadbalancing:DescribeLoadBalancerPolicies",
+                        "elasticloadbalancing:DescribeLoadBalancers",
+                        "elasticloadbalancing:DescribeTags",
+                        "elasticloadbalancing:DetachLoadBalancerFromSubnets",
+                        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                        "elasticloadbalancing:RemoveTags"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "iam:PassRole",
+                        "iam:GetRole"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["cloudformation:DescribeStacks"],
+                  "Resource": "*"
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutDestination",
+                        "logs:PutDestinationPolicy",
+                        "logs:PutLogEvents",
+                        "logs:PutMetricFilter"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "dynamodb:CreateTable",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:DeleteTable",
+                        "dynamodb:GetItem",
+                        "dynamodb:PutItem"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                }
+                ]
+              }}]}
+    },
+    "ILBDeployerLambda0" : {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+            "Handler": "ilb_deployer.ilb_deploy_handler",
+            "Role": {"Fn::GetAtt" :
+                      ["LambdaExecutionRole0",
+                        "Arn"
+                      ]
+            },
+            "Code": {
+                "S3Bucket": { "Ref": "S3BucketName"},
+                "S3Key": { "Ref": "LambdaZipFileName"}
+            },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      },
+      "DependsOn": ["InternalLoadBalancer", "WebServerLaunchConfig", "WebServerListener"]
+    },
+    "LambdaCustomResource0": {
+        "Type": "AWS::CloudFormation::CustomResource",
+        "Version" : "1.0",
+        "DependsOn": ["ILBDeployerLambda0"],
+         "Properties" : {
+             "ServiceToken": { "Fn::GetAtt" : ["ILBDeployerLambda0", "Arn"] },
+             "StackName": {"Ref": "AWS::StackName"},
+             "Region": {"Ref": "AWS::Region"},
+             "ILB-TYPE": {"Ref": "ILBType"},
+             "ILB-ARN": {"Ref": "InternalLoadBalancer"},
+             "ILB-NAME": {"Ref": "ILBName"},
+             "ILB-DNS": {"Fn::GetAtt" : ["InternalLoadBalancer", "DNSName"]},
+             "LambdaExecutionRole": {"Ref": "LambdaExecutionRole0"},
+             "S3BucketName": {"Ref": "S3BucketName"},
+             "S3ObjectName": {"Ref": "LambdaZipFileName"},
+             "QueueURL": {"Ref": "QueueURL"},
+         }
+    }
+  }
+}

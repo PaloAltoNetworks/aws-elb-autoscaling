@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<device-group>
+  <entry name="awsdemo2.1_dg" dg_ctxt="127">
+    <devices>
+      <entry name="007255000049591">
+        <vsys>
+          <entry name="vsys1"/>
+        </vsys>
+      </entry>
+    </devices>
+  </entry>
+</device-group>

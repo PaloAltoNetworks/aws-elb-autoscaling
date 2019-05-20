@@ -1,0 +1,1852 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates VPC, Subnets, Route Tables, SG, External Application ExLB, ASG for PANW firewall and Lambda Infrastructure for the VM-Series firewall",
+  "Parameters" : {
+    "VPCID" : {
+      "Type": "AWS::EC2::VPC::Id",      
+      "Description" : "VPC ID to be deployed into"
+    },
+    "VPCCIDR": {
+      "Type": "String",
+      "Description": "Enter the VPC CIDR that you want to use",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+    },    
+    "InternetGatewayID" : {
+        "Type": "String",
+        "Description": "InternetGateway ID in the VPC to be deployed into"
+    },
+    "SubscriberAWSAccountNumber": {
+      "Description": "Subscriber AWS Account number(s) required for Assume Role, Provide comma separated valid 12-digit AWS Account Number. Note: While doing stack Update, add account numbers to the existing account numbers. If you delete the existing account numbers, those accounts will no longer be subscribed with Firewall deployment",
+      "Type": "String"
+    },
+    "KeyPANWFirewall": {
+      "Type" : "String",
+      "Description": "API Key associated to username/password of the VM-Series Firewall. By default it is pandemo/demopassword",
+      "Default": "LUFRPT1Zd2pYUGpkMUNrVEZlb3hROEQyUm95dXNGRkU9N0d4RGpTN2VZaVZYMVVoS253U0p6dlk3MkM0SDFySEh2UUR4Y3hzK2g3ST0=",
+      "AllowedPattern": "[\\S0-9a-zA-Z]+",
+      "ConstraintDescription" : "The PAN FW API key is required.",
+      "NoEcho" : "true"
+    },
+    "KeyPANWPanorama": {
+      "Type" : "String",
+      "Description": "API Key associated to username/password of the Panorama.",
+      "NoEcho" : "true"
+    },
+    "PanoramaAdminUser": {
+      "Type" : "String",
+      "Description": "Enter the admin username for the Panorama instance",
+      "MinLength" : "3",
+      "MaxLength" : "63"
+    },
+    "BootstrapS3Bucket": {
+      "Type" : "String",
+      "Description": "Enter the name of the Bootstrap S3 bucket for the VM-Series firewall",
+      "MinLength" : "3",
+      "MaxLength" : "63"
+    },
+    "PanFwAmiId": {
+    	"Type": "AWS::EC2::Image::Id",
+    	"Description": "Link to Ami Id lookup table: https://www.paloaltonetworks.com/documentation/global/compatibility-matrix/vm-series-firewalls/aws-cft-amazon-machine-images-ami-list"
+    },
+    "ELBName": {
+      "Type" : "String",
+      "Description": "Enter the name of the external Application Load Balancer",
+      "Default": "public-exlb",
+      "MinLength" : "3",
+      "MaxLength" : "12"
+    },
+    "KeyName" : {
+       "Description" : "Amazon EC2 Key Pair",
+       "Type" : "AWS::EC2::KeyPair::KeyName"
+    },
+    "SSHLocation" : {
+      "Description" : "Restrict SSH access to the VM-Series firewall (enter a valid CIDR range in the format of x.x.x.x/x)",
+      "Type" : "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid CIDR range in the format of x.x.x.x/x"
+    },
+    "NumberOfAZs": {
+        "Description" : "Total Number of AZs which will be used in this deployment (Min 2 and Max 4 depending on az availability)",
+        "Type" : "Number",
+        "MinValue" : "2",
+        "Default" : "2",
+        "MaxValue" : "4"
+    },    
+    "VpcAzs": {
+      "Type": "List<AWS::EC2::AvailabilityZone::Name>",
+      "Description": "Enter the list of Availability Zones (Based on Number of AZs above)"
+    },
+    "MgmtSubnetIpBlocks": {
+        "Description": "Management subnet comma-delimited list of CIDR blocks .Ex: 192.168.0.0/24, 192.168.10.0/24, 192.168.20.0/24",
+        "Type": "CommaDelimitedList"
+    },
+    "UntrustSubnetIpBlocks": {
+        "Description": "Untrust subnet comma-delimited list of CIDR blocks. Ex:192.168.1.0/24, 192.168.11.0/24, 192.168.21.0/24",
+        "Type": "CommaDelimitedList"
+    },
+    "TrustSubnetIpBlocks": {
+        "Description": "Trust subnet comma-delimited list of CIDR blocks. Ex: 192.168.2.0/24, 192.168.12.0/24, 192.168.22.0/24",
+        "Type": "CommaDelimitedList"
+    },
+    "NATGWSubnetIpBlocks": {
+        "Description": "AWS NAT Gateway Comma-delimited list of CIDR blocks. Ex:192.168.100.0/24, 192.168.101.0/24, 192.168.102.0/24",
+        "Type": "CommaDelimitedList"
+    },
+    "LambdaSubnetIpBlocks": {
+        "Description": "Lambda Funcion Subnets for AZ: Comma-delimited list of CIDR blocks only if NAT Gateway is needed. Ex:192.168.200.0/24, 192.168.201.0/24, 192.168.202.0/24",
+        "Type": "CommaDelimitedList"
+    },    
+    "LambdaS3Bucket": {
+      "Type" : "String",
+      "Description": "VM-Series firewall Lambda/Scripts/CFT template S3 Bucket or your own in the same region",
+      "Default": "panw-aws-autoscale-v21",
+      "MinLength" : "3",
+      "MaxLength" : "63"
+    },
+    "ELBType": {
+      "Type": "String",
+      "Default": "application",
+      "AllowedValues": [
+        "application",
+        "network"
+      ],
+      "Description": "Choose the type of external load balancer required in the firewall template"
+    },         
+    "Debug": {
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Description": "Enable/Disable debug. Default is disabled"
+    }        
+  },
+  "Mappings": {
+    "BucketRegionMap" : {
+      "LambdaRegion"      : { "DefaultRegion": "panw-aws-autoscale-v21" }
+    },
+    "KeyMap" : {
+      "Key"     : { "Key": "panw-aws.zip" }
+    },
+    "FWInstanceTypeMap" : {
+      "TypeM4"            : { "M4xlarge": "m4.xlarge", "M44xlarge": "m4.4xlarge" },
+      "TypeM3"            : { "M3xlarge": "m3.xlarge", "M32xlarge": "m3.2xlarge" },
+      "TypeC4"            : { "C4xlarge": "c4.xlarge", "C42xlarge": "c4.2xlarge", "C44xlarge": "c4.4xlarge" },
+      "TypeC3"            : { "C3xlarge": "c3.xlarge", "C32xlarge": "c3.2xlarge", "C34xlarge": "c3.4xlarge" }
+    },
+    "ASGScaleMap" : {
+      "MinInstances"        : { "ASG": "2" },
+      "MaxInstances"        : { "ASG": "5" },
+      "ScaleUpThreshold"    : {"ASG": "80" },
+      "ScaleDownThreshold"  : {"ASG": "20" },
+      "ScalingParam"        : {"CPU": "DataPlaneCPUUtilizationPct", "AS": "panSessionActive", "SU": "panSessionUtilization", "SSPU":"panSessionSslProxyUtilization", "GPU": "panGPGatewayUtilizationPct", "GPAT": "panGPGWUtilizationActiveTunnels", "DPB": "DataPlanePacketBufferUtilization"},
+      "ScalingPeriod"        : {"ASG": "900" }
+    }  
+  },
+  "Conditions" : {
+    "PANWScript" : {"Fn::Equals" : [ {"Ref": "LambdaS3Bucket" }, { "Fn::FindInMap" : [ "BucketRegionMap", "LambdaRegion", "DefaultRegion" ]}]},
+    "CreateSubnet2" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "2"]},
+    "CreateSubnet3" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "3"]},   
+    "CreateSubnet3more" : { "Fn::Or": [ {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "3"]}, {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "4"]}]},
+    "CreateSubnet4" : {"Fn::Equals" : [{"Ref" : "NumberOfAZs"}, "4"]},
+    "CreateELBTypeApp" : {"Fn::Equals" : [{"Ref" : "ELBType"}, "application"]},
+    "CreateELBTypeNet" : {"Fn::Equals" : [{"Ref" : "ELBType"}, "network"]}        
+  },
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+      {
+        "Label" : {"default": "VPC Configuration"},
+        "Parameters" : ["VPCID", "VPCCIDR", "InternetGatewayID", "MgmtSubnetIpBlocks", "UntrustSubnetIpBlocks", "TrustSubnetIpBlocks", "NATGateway", "NATGWSubnetIpBlocks","LambdaSubnetIpBlocks", "NumberOfAZs", "VpcAzs", "ELBType"]
+      },    
+      {
+        "Label" : {"default": "VM-Series firewall Instance configuration"},
+        "Parameters" : ["PanFwAmiId", "KeyName", "SSHLocation", "Debug"]
+      },
+      {
+        "Label" : {"default": "S3 Bucket details"},
+        "Parameters" : ["BootstrapS3Bucket", "LambdaS3Bucket"]
+      },
+      {
+        "Label" : {"default": "VM-Series API Key and Panorama username"},
+        "Parameters" : ["KeyPANWFirewall", "KeyPANWPanorama", "PanoramaAdminUser"]
+      },
+      {
+        "Label" : {"default": "Cross-account configuration"},
+        "Parameters" : ["SubscriberAWSAccountNumber"]
+      }
+      ],
+      "ParameterLabels" : {
+        "VPCID": {"default": "VPC Id:"},
+        "VPCCIDR": {"default": "CIDR Block for the VPC:"},
+        "InternetGatewayID": {"default": "InternetGateway Id:"},
+        "MgmtSubnetIpBlocks": {"default": "Management Subnet CIDR Block:"},
+        "UntrustSubnetIpBlocks": {"default": "Untrust Subnet CIDR Block:"},
+        "TrustSubnetIpBlocks": {"default": "Trust Subnet CIDR Block:"},
+        "NATGWSubnetIpBlocks": {"default": "NAT Gateway Subnet CIDR Block:"},
+        "LambdaSubnetIpBlocks": {"default": "Lambda Subnet CIDR Block:"},      
+        "PanFwAmiId": {"default": "AMIId of PANFW Image:"},
+        "KeyName": {"default": "Key pair:"},
+        "SSHLocation": {"default": "SSH From:"},
+        "BootstrapS3Bucket": {"default": "Bootstrap bucket for VM-Series firewalls"},
+        "LambdaS3Bucket": {"default": "S3 Bucket Name for Lambda Code:"},
+        "KeyPANWFirewall": {"default": "API Key for Firewall:"},
+        "KeyPANWPanorama": {"default": "API Key for Panorama:"},
+        "PanoramaAdminUser": {"default": "Admin username for Panorama:"},
+        "ELBName": {"default": "Name of External Application Load Balancer:"},
+        "VpcAzs": {"default": "Select  AZs:"},
+        "AZSubnetIDUntrust": {"default": "Subnet ID of Untrust Interface:"},
+        "AZSubnetIDTrust": {"default": "Subnet ID of Trust Interface:"},
+        "Debug": {"default": "Enable Debug Log:"},
+        "SubscriberAWSAccountNumber": {"default": "Subscriber Account Number(s):"}
+      }                 
+    }                   
+  },
+  "Resources" : {
+    "LambdaSubnetAz1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "LambdaSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "LambdaFunction" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaSubnetAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaSubnetAz2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "LambdaSubnetIpBlocks"} ] },
+         "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "LambdaFunction" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaSubnetAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaSubnetAz3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "2", {"Ref" : "LambdaSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "LambdaFunction" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaSubnetAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaSubnetAz4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "3", {"Ref" : "LambdaSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "LambdaFunction" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaSubnetAz4" ] ] }}
+        ]
+      }
+      
+    },    
+    "LambdaRouteTableAz1" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaRouteTableAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaRouteTableAz2" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaRouteTableAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaRouteTableAz3" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaRouteTableAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "LambdaRouteTableAz4" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "LambdaRouteTableAz4" ] ] }}
+        ]
+      }
+      
+    },    
+    "NATGWSubnetAz1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "NATGWSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "NATGW" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWSubnetAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWSubnetAz2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "NATGWSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "NATGW" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWSubnetAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWSubnetAz3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "2", {"Ref" : "NATGWSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "NATGW" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWSubnetAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWSubnetAz4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "3", {"Ref" : "NATGWSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "NATGW" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWSubnetAz4" ] ] }}
+        ]
+      }
+      
+    },
+    
+    "EIP1" : {
+       "Type" : "AWS::EC2::EIP",
+       "Properties" : {
+          "Domain" : "VPCID"
+       }
+    },
+    "EIP2" : {
+       "Type" : "AWS::EC2::EIP",
+       "Properties" : {
+          "Domain" : "VPCID"
+       }
+    },
+    "EIP3" : {
+       "Type" : "AWS::EC2::EIP",
+       "Condition" : "CreateSubnet3more",
+       "Properties" : {
+          "Domain" : "VPCID"
+       }
+    },
+    "EIP4" : {
+       "Type" : "AWS::EC2::EIP",
+       "Condition" : "CreateSubnet4",
+       "Properties" : {
+          "Domain" : "VPCID"
+       }
+    },   
+    "NAT1" : {
+       "Type" : "AWS::EC2::NatGateway",
+        "Properties" : {
+          "AllocationId" : { "Fn::GetAtt" : ["EIP1", "AllocationId"]},
+          "SubnetId" : { "Ref" : "NATGWSubnetAz1"}
+       },
+       "DependsOn" : [ "EIP1", "NATGWSubnetAz1" ]
+    },
+    "NAT2" : {
+       "Type" : "AWS::EC2::NatGateway",
+        "Properties" : {
+          "AllocationId" : { "Fn::GetAtt" : ["EIP2", "AllocationId"]},
+          "SubnetId" : { "Ref" : "NATGWSubnetAz2"}
+       },
+       "DependsOn" : [ "EIP2", "NATGWSubnetAz2" ]
+    },
+    "NAT3" : {
+       "Type" : "AWS::EC2::NatGateway",
+       "Condition" : "CreateSubnet3more",
+          "Properties" : {
+          "AllocationId" : { "Fn::GetAtt" : ["EIP3", "AllocationId"]},
+          "SubnetId" : { "Ref" : "NATGWSubnetAz3"}
+       },
+       "DependsOn" : [ "EIP3", "NATGWSubnetAz3" ]
+    },
+    "NAT4" : {
+       "Type" : "AWS::EC2::NatGateway",
+       "Condition" : "CreateSubnet4",
+          "Properties" : {
+          "AllocationId" : { "Fn::GetAtt" : ["EIP4", "AllocationId"]},
+          "SubnetId" : { "Ref" : "NATGWSubnetAz4"}
+       },
+       "DependsOn" : [ "EIP4", "NATGWSubnetAz4" ]
+    },      
+    "MGMTSubnetAz1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "MgmtSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "MGMT" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTSubnetAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTSubnetAz2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "MgmtSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "MGMT" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTSubnetAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTSubnetAz3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "2", {"Ref" : "MgmtSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "MGMT" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTSubnetAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTSubnetAz4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] },
+        "MapPublicIpOnLaunch": true,
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "3", {"Ref" : "MgmtSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "MGMT" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTSubnetAz4" ] ] }}
+        ]
+      }
+      
+    },    
+    "NATGWRouteTableAz1" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWRouteTableAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWRouteTableAz2" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWRouteTableAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWRouteTableAz3" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWRouteTableAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "NATGWRouteTableAz4" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "NATGWRouteTableAz4" ] ] }}
+        ]
+      }
+      
+    },    
+    "NATGWRoute1" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz1" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGatewayID" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz1" ]
+    },
+    "NATGWRoute2" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz2" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGatewayID" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz2" ]
+    },
+    "NATGWRoute3" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz3" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGatewayID" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz3" ]
+    },
+    "NATGWRoute4" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz4" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGatewayID" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz4" ]
+    },        
+    "MGMTRouteTableAz1" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTRouteTableAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTRouteTableAz2" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTRouteTableAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTRouteTableAz3" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTRouteTableAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "MGMTRouteTableAz4" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "MGMTRouteTableAz4" ] ] }}
+        ]
+      }
+      
+    },    
+    "LambdaRoute1" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz1" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT1" }
+      },
+      "DependsOn": [ "NAT1" ]
+    },
+    "LambdaRoute2" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz2" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT2" }
+      },
+      "DependsOn": [ "NAT2" ]
+    },
+    "LambdaRoute3" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz3" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT3" }
+      },
+      "DependsOn": [ "NAT3" ]
+    },
+    "LambdaRoute4" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz4" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT4" }
+      },
+      "DependsOn": [ "NAT4" ]
+    },    
+    "MGMTRouteNAT1" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz1" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT1" }
+      },
+      "DependsOn": [ "NAT1" ]
+    },
+    "MGMTRouteNAT2" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz2" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT2" }
+      },
+      "DependsOn": [ "NAT2" ]
+    },
+    "MGMTRouteNAT3" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz3" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT3" }
+      },
+      "DependsOn": [ "NAT3" ]
+    },
+    "MGMTRouteNAT4" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz4" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT4" }
+      },
+      "DependsOn": [ "NAT4" ]
+    },    
+    "LambdaSubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "LambdaSubnetAz1" },
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz1" }
+      },
+      "DependsOn": [ "LambdaRouteTableAz1", "LambdaSubnetAz1" ]
+    },
+    "LambdaSubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "LambdaSubnetAz2" },
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz2" }
+      },
+      "DependsOn": [ "LambdaRouteTableAz2", "LambdaSubnetAz2" ]
+    },
+    "LambdaSubnetRouteTableAssociation3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "LambdaSubnetAz3" },
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz3" }
+      }, 
+      "DependsOn": [ "LambdaRouteTableAz3", "LambdaSubnetAz3" ]
+    },
+    "LambdaSubnetRouteTableAssociation4" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "LambdaSubnetAz4" },
+        "RouteTableId" : { "Ref" : "LambdaRouteTableAz4" }
+      }, 
+      "DependsOn": [ "LambdaRouteTableAz4", "LambdaSubnetAz4" ]
+    },  
+    "NAT1SubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "NATGWSubnetAz1" },
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz1" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz1", "NATGWSubnetAz1" ]
+    },
+    "NAT2SubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "NATGWSubnetAz2" },
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz2" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz2", "NATGWSubnetAz2" ]
+    },
+    "NAT3SubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "NATGWSubnetAz3" },
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz3" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz3", "NATGWSubnetAz3" ]
+    },
+    "NAT4SubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "NATGWSubnetAz4" },
+        "RouteTableId" : { "Ref" : "NATGWRouteTableAz4" }
+      },
+      "DependsOn": [ "NATGWRouteTableAz4", "NATGWSubnetAz4" ]
+    },    
+    "MGMTSubnetRouteTableAssociationNAT1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "MGMTSubnetAz1" },
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz1" }
+      },
+      "DependsOn": [ "MGMTRouteNAT1", "MGMTSubnetAz1" ]
+    },
+    "MGMTSubnetRouteTableAssociationNAT2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "MGMTSubnetAz2" },
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz2" }
+      },
+      "DependsOn": [ "MGMTSubnetAz2" ]
+    },
+    "MGMTSubnetRouteTableAssociationNAT3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "MGMTSubnetAz3" },
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz3" }
+      }, 
+      "DependsOn": [ "MGMTSubnetAz3" ]
+    },
+    "MGMTSubnetRouteTableAssociationNAT4" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "MGMTSubnetAz4" },
+        "RouteTableId" : { "Ref" : "MGMTRouteTableAz4" }
+      }, 
+      "DependsOn": [ "MGMTSubnetAz4" ]
+    },    
+    "UNTRUSTSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "UntrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "UNTRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "UNTRUSTSubnet1" ] ] }}
+        ]
+      }
+      
+    },
+    "UNTRUSTSubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "UntrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "UNTRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "UNTRUSTSubnet2" ] ] }}
+        ]
+      }
+      
+    },
+    "UNTRUSTSubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "2", {"Ref" : "UntrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "UNTRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "UNTRUSTSubnet3" ] ] }}
+        ]
+      } 
+      
+    },
+    "UNTRUSTSubnet4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "3", {"Ref" : "UntrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "UNTRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "UNTRUSTSubnet4" ] ] }}
+        ]
+      }
+      
+    },    
+    "UNTRUSTRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "UNTRUST" },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "UNTRUSTRouteTable" ] ] }}
+        ]
+      }
+    },
+    "UNTRUSTRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "UNTRUSTRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGatewayID" }
+      },
+      "DependsOn": [ "UNTRUSTRouteTable" ]
+    },
+    "UNTRUSTSubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "UNTRUSTSubnet1" },
+        "RouteTableId" : { "Ref" : "UNTRUSTRouteTable" }
+      },
+      "DependsOn": [ "UNTRUSTRoute", "UNTRUSTSubnet1" ]
+    },
+    "UNTRUSTSubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "UNTRUSTSubnet2" },
+        "RouteTableId" : { "Ref" : "UNTRUSTRouteTable" }
+      },
+      "DependsOn": [ "UNTRUSTRoute", "UNTRUSTSubnet2" ]
+    },
+    "UNTRUSTSubnetRouteTableAssociation3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "UNTRUSTSubnet3" },
+        "RouteTableId" : { "Ref" : "UNTRUSTRouteTable" }
+      },
+      "DependsOn": [ "UNTRUSTRoute", "UNTRUSTSubnet3" ]
+    },
+    "UNTRUSTSubnetRouteTableAssociation4" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "UNTRUSTSubnet4" },
+        "RouteTableId" : { "Ref" : "UNTRUSTRouteTable" }
+      },
+      "DependsOn": [ "UNTRUSTRoute", "UNTRUSTSubnet4" ]
+    },    
+    "TRUSTSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "0", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "0", {"Ref" : "TrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TRUSTSubnet1" ] ] }}
+        ]
+      }
+    },
+    "TRUSTSubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "1", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "1", {"Ref" : "TrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TRUSTSubnet2" ] ] }}
+        ]
+      }
+    },
+    "TRUSTSubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "2", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "2", {"Ref" : "TrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TRUSTSubnet3" ] ] }}
+        ] 
+      }
+    },
+    "TRUSTSubnet4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "AvailabilityZone" : { "Fn::Select" : [ "3", {"Ref" : "VpcAzs"} ] },
+        "VpcId" : { "Ref" : "VPCID" },
+        "CidrBlock" : { "Fn::Select" : [ "3", {"Ref" : "TrustSubnetIpBlocks"} ] },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value" : { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TRUSTSubnet4" ] ] }}
+        ] 
+      }
+    },      
+    "TrustRouteTableAz1" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TrustRouteTableAz1" ] ] }}
+        ]
+      }
+      
+    },
+    "TrustRouteTableAz2" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TrustRouteTableAz2" ] ] }}
+        ]
+      }
+      
+    },
+    "TrustRouteTableAz3" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet3more",      
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TrustRouteTableAz3" ] ] }}
+        ]
+      }
+      
+    },
+    "TrustRouteTableAz4" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "CreateSubnet4",      
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags" : [
+          { "Key" : "Application", "Value" : { "Ref" : "AWS::StackId" } },
+          { "Key" : "Network", "Value" : "TRUST" },
+          { "Key" : "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "TrustRouteTableAz4" ] ] }}
+        ]
+      }
+      
+    },            
+    "TrustRouteNAT1" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz1" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT1" }
+      },
+      "DependsOn": [ "NAT1" ]
+    },
+    "TrustRouteNAT2" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz2" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT2" }
+      },
+      "DependsOn": [ "NAT2" ]
+    },
+    "TrustRouteNAT3" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet3more",      
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz3" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT3" }
+      },
+      "DependsOn": [ "NAT3" ]
+    },
+    "TrustRouteNAT4" : {
+      "Type" : "AWS::EC2::Route",
+      "Condition" : "CreateSubnet4",      
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz4" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NAT4" }
+      },
+      "DependsOn": [ "NAT4" ]
+    },     
+    "TRUSTSubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "TRUSTSubnet1" },
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz1" }
+      },
+      "DependsOn": [ "TRUSTSubnet1" ]
+    },
+    "TRUSTSubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "TRUSTSubnet2" },
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz2" }
+      },
+      "DependsOn": [ "TRUSTSubnet2" ]
+    },
+    "TRUSTSubnetRouteTableAssociation3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet3more",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "TRUSTSubnet3" },
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz3" }
+      },
+      "DependsOn": [ "TRUSTSubnet3" ]
+    },
+    "TRUSTSubnetRouteTableAssociation4" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "CreateSubnet4",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "TRUSTSubnet4" },
+        "RouteTableId" : { "Ref" : "TrustRouteTableAz4" }
+      },
+      "DependsOn": [ "TRUSTSubnet4" ]
+    },       
+    "PublicLoadBalancerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Public ALB Security Group with HTTP access on port 80 from the internet",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" },  "PublicLoadBalancerSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"} ],
+        "SecurityGroupEgress" : [ { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "2000", "CidrIp" : "0.0.0.0/0"} ]
+      }
+      
+    },
+    "PublicLoadBanlancerListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [{
+        "Type": "forward",
+        "TargetGroupArn": { "Fn::If" : [ "CreateELBTypeApp", { "Ref" : "PublicLoadBalancerTargetGroup" },{ "Ref" : "NetworkLoadBalancerTargetGroup" }]}
+      }],
+      "LoadBalancerArn": { "Ref": "PublicLoadBalancer" },
+        "Port": "80",
+        "Protocol":{ "Fn::If" : [ "CreateELBTypeApp", "HTTP", "TCP"]}
+      }
+    },    
+    "PublicLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties" : {
+        "Name" : { "Ref" : "ELBName" },
+        "Type" : { "Ref" : "ELBType" },
+        "SecurityGroups" : [{ "Fn::If" : [ "CreateELBTypeApp", { "Ref" : "PublicLoadBalancerSecurityGroup" },{ "Ref" : "AWS::NoValue" }]}],        
+        "Subnets" : { "Fn::If" : [ "CreateSubnet2", { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" } ] ] } ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" }, { "Ref" : "UNTRUSTSubnet3" } ] ] } ] }, { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" }, { "Ref" : "UNTRUSTSubnet3" }, { "Ref" : "UNTRUSTSubnet4" } ] ] } ] }] } ] },
+        "Scheme" : "internet-facing"
+      },
+      "DependsOn": [ "PublicLoadBalancerSecurityGroup", "UNTRUSTSubnet1", "UNTRUSTSubnet2"]
+    },   
+    "PublicLoadBalancerTargetGroup" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Condition" : "CreateELBTypeApp",      
+      "Properties" : {
+        "HealthCheckIntervalSeconds" : 60,
+        "UnhealthyThresholdCount" : 10,
+        "HealthCheckProtocol" : "HTTP",
+        "HealthCheckPort" : "81",
+        "HealthCheckPath" : "/index.html",
+        "Matcher" : {
+            "HttpCode" : "200"
+        },
+        "Port" : 81,
+        "Protocol" : "HTTP",
+        "VpcId" : { "Ref": "VPCID" }
+      }
+    },
+    "NetworkLoadBalancerTargetGroup": {
+       "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Condition" : "CreateELBTypeNet",               
+       "Properties" : {
+             "Port" : "81",
+             "Protocol" : "TCP",
+             "UnhealthyThresholdCount" : "3",
+             "VpcId" : { "Ref": "VPCID" }
+       }
+    },    
+    "NetworkLoadBalancerQueue": {
+   		"Type" : "AWS::SQS::Queue"
+        
+	  },     
+    "S3Endpoint" : {
+       "Type" : "AWS::EC2::VPCEndpoint",
+       "Condition" : "CreateSubnet2",       
+       "Properties" : { 
+       "PolicyDocument" : {
+          "Version":"2012-10-17",
+          "Statement":[
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:ListBucket",
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" } ] ] }
+          },    
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject", 
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+          }
+          ]
+        },
+        "RouteTableIds" : [ {"Ref" : "UNTRUSTRouteTable"}],
+        "ServiceName" : { "Fn::Join": [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".s3" ] ] },
+        "VpcId" : {"Ref" : "VPCID"}
+     }
+    },
+    "S3Endpoint3" : {
+       "Type" : "AWS::EC2::VPCEndpoint",
+       "Condition" : "CreateSubnet3",       
+       "Properties" : { 
+       "PolicyDocument" : {
+          "Version":"2012-10-17",
+          "Statement":[
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:ListBucket",
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" } ] ] }
+          },    
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject", 
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+          }
+          ]
+        },
+        "RouteTableIds" : [ {"Ref" : "UNTRUSTRouteTable"}],
+        "ServiceName" : { "Fn::Join": [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".s3" ] ] },
+        "VpcId" : {"Ref" : "VPCID"}
+     }
+    },
+    "S3Endpoint4" : {
+       "Type" : "AWS::EC2::VPCEndpoint",
+       "Condition" : "CreateSubnet4",       
+       "Properties" : { 
+       "PolicyDocument" : {
+          "Version":"2012-10-17",
+          "Statement":[
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:ListBucket",
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" } ] ] }
+          },    
+          {     
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject", 
+                "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+          }
+          ]
+        },
+        "RouteTableIds" : [ {"Ref" : "UNTRUSTRouteTable"}],
+        "ServiceName" : { "Fn::Join": [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".s3" ] ] },
+        "VpcId" : {"Ref" : "VPCID"}
+     }
+    },        
+    "FirewallBootstrapRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [ {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                "Action": "sts:AssumeRole"
+                } ]
+            },
+            "Path":"/",
+            "Policies": [ {
+                "PolicyName" : "FirewallBootstrapRolePolicy",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Action": "s3:ListBucket",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" } ] ] }
+                    },
+                    {  
+                        "Effect": "Allow",
+                        "Action": "s3:GetObject",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                          "cloudwatch:*"
+                        ],
+                        "Resource": [
+                          "*"
+                        ]
+                    }]
+                }
+            }]
+        }
+    },  
+    "FirewallBootstrapInstanceProfile":{
+        "Type": "AWS::IAM::InstanceProfile",
+        "Properties": {
+          "Path": "/",
+          "Roles": [ {
+              "Ref": "FirewallBootstrapRole"
+            }]
+        },
+        "DependsOn": [ "FirewallBootstrapRole" ]
+    },
+    "MgmtSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH to MGMT interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "MgmtSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22",  "CidrIp" : { "Ref" : "SSHLocation" }},
+				  { "IpProtocol" : "tcp", "FromPort" : "443",  "ToPort" : "443",  "CidrIp" : {"Ref" : "SSHLocation"}},
+				  { "IpProtocol" : "-1", "FromPort" : "-1",  "ToPort" : "-1",  "CidrIp" : { "Ref" : "VPCCIDR" } },
+				  { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "CidrIp" : { "Ref" : "VPCCIDR" } }],
+        "SecurityGroupEgress"  : [ { "IpProtocol" : "-1", "FromPort" : "-1",  "ToPort" : "-1",  "CidrIp" : "0.0.0.0/0" }]
+      }
+    },
+    "UntrustSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for Untrust interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "UntrustSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "TrustSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for trust interface",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "TrustSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "VPCSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security Group for within VPC",
+        "VpcId" : { "Ref" : "VPCID" },
+        "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" },  "VPCSecurityGroup" ] ] } } ],
+        "SecurityGroupIngress" : [{
+                "IpProtocol" : "-1",
+                "FromPort" : "-1",
+                "ToPort" : "-1",
+                "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+             "IpProtocol" : "-1",
+             "FromPort" : "-1",
+             "ToPort" : "-1",
+             "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    },
+    "LambdaExecutionRole" : {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [ {
+                 "Effect": "Allow",
+                 "Principal": {
+                 "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              } ]
+            },
+            "Path":"/",
+            "Policies": [ {
+              "PolicyName": "LambdaExecutionRolePolicy",
+              "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Effect": "Allow",
+                    "Action": "s3:ListBucket",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+                },
+                {  
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" }, "/*" ] ] }
+                },
+                {
+                        "Effect": "Allow",
+                        "Action": "s3:ListBucket",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ "panw-aws-autoscale-v21", { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] }] ] }
+                },
+                {  
+                        "Effect": "Allow",
+                        "Action": "s3:GetObject",
+                        "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ "panw-aws-autoscale-v21", { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] }, "/*" ] ] }
+                },
+                {
+                        "Effect": "Allow",
+                        "Action": ["iam:UpdateAssumeRolePolicy","iam:GetRole","iam:PassRole", "iam:CreateServiceLinkedRole"],
+                        "Resource": ["*" ]
+                },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress",
+                "ec2:AssociateRouteTable",
+                "ec2:AttachNetworkInterface",
+                "ec2:CreateNetworkInterface",
+                "ec2:CreateTags",
+                "ec2:CreateRoute",
+                "ec2:CreateVpcEndpoint",
+                "ec2:DeleteNetworkInterface",
+                "ec2:DeleteRouteTable",
+                "ec2:DeleteRoute",
+                "ec2:DeleteSecurityGroup",
+                "ec2:DeleteTags",
+                "ec2:DeleteVpcEndpoints",
+                "ec2:DeleteVpcPeeringConnection",
+                "ec2:DescribeAddresses",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeVpcEndpointServices",
+                "ec2:DescribeVpcPeeringConnections",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceStatus",
+                "ec2:DescribeInstances",
+                "ec2:DescribeImages",
+                "ec2:DescribeNatGateways",
+                "ec2:DescribeNetworkInterfaceAttribute",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeTags",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DetachNetworkInterface",
+                "ec2:DetachVolume",
+                "ec2:DisassociateAddress",
+                "ec2:DisassociateRouteTable",
+                "ec2:ModifyNetworkInterfaceAttribute",
+                "ec2:ModifySubnetAttribute",
+                "ec2:MonitorInstances",
+                "ec2:RebootInstances",
+                "ec2:ReleaseAddress",
+                "ec2:ReportInstanceStatus",
+                "ec2:TerminateInstances",
+                "ec2:DescribeIdFormat",
+                "ec2:RunInstances"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "events:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:CreateEventSourceMapping",
+                "lambda:CreateFunction",
+                "lambda:DeleteEventSourceMapping",
+                "lambda:DeleteFunction",
+                "lambda:GetEventSourceMapping",
+                "lambda:ListEventSourceMappings",
+                "lambda:RemovePermission",
+                "lambda:UpdateEventSourceMapping",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:GetFunction",
+                "lambda:ListFunctions"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:SetQueueAttributes",
+                "sqs:PurgeQueue",
+                "sqs:DeleteMessage"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:AddTags",
+                "elasticloadbalancing:AttachLoadBalancerToSubnets",
+                "elasticloadbalancing:ConfigureHealthCheck",
+                "elasticloadbalancing:DescribeInstanceHealth",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "elasticloadbalancing:DescribeLoadBalancerPolicyTypes",
+                "elasticloadbalancing:DescribeLoadBalancerPolicies",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:DescribeTags",
+                "elasticloadbalancing:DetachLoadBalancerFromSubnets",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:RemoveTags",
+                "elasticloadbalancing:DescribeTargetGroups"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+          "Resource": "arn:aws:logs:*:*:*"
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["cloudformation:DescribeStacks"],
+          "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutDestination",
+                "logs:PutDestinationPolicy",
+                "logs:PutLogEvents",
+                "logs:PutMetricFilter"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "dynamodb:*",
+            "Resource": "arn:aws:dynamodb:*:*:*"
+        }
+        ]
+      }}]}
+    },
+    "FwInit" : {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+          "Handler": "fw_init.lambda_handler",
+          "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+          "Code": {
+              "S3Bucket": { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ "panw-aws-autoscale-v21", { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] },
+                "S3Key": { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] }
+          },
+          "Runtime": "python2.7",
+          "Timeout": "300",
+          "VpcConfig": {
+           	"SubnetIds": { "Fn::If" : [ "CreateSubnet2", { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" } ] ] } ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" }, { "Ref" : "LambdaSubnetAz3" } ] ] } ] }, { "Fn::Split" : [ ":" , {"Fn::Join" : [ ":", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" }, { "Ref" : "LambdaSubnetAz3" }, { "Ref" : "LambdaSubnetAz4" } ] ] } ] }] } ] },
+          	"SecurityGroupIds":  [{"Ref": "VPCSecurityGroup"}]
+          }
+        },
+        "DependsOn": [ "LambdaExecutionRole", "VPCSecurityGroup" ]
+    },    
+    "LambdaENIQueue": {
+   		"Type" : "AWS::SQS::Queue",
+        "DependsOn": [ "InitLambda" ]
+	  }, 
+    "LambdaENISNSTopic" : {
+        "Type" : "AWS::SNS::Topic",
+        "Properties" : {
+            "Subscription" : [ {
+            "Endpoint" : { "Fn::GetAtt" : ["FwInit", "Arn"]},
+            "Protocol" : "lambda"
+            } ]
+        },
+        "DependsOn": [ "FwInit" ]
+    },
+    "LambdaENIPermission": {
+        "Type" : "AWS::Lambda::Permission",
+        "Properties" : {
+            "Action" : "lambda:InvokeFunction",
+            "FunctionName" : {"Fn::GetAtt" : ["FwInit", "Arn"]},
+            "Principal" : "sns.amazonaws.com",
+            "SourceArn" : {"Ref" : "LambdaENISNSTopic"}
+        },
+        "DependsOn": [ "FwInit", "LambdaENISNSTopic" ]
+    },
+    "ASGNotifierRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "autoscaling.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/"
+      }
+    },
+    "ASGNotifierRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": { "Ref": "AWS::StackName" },
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Action": "sns:Publish",
+            "Resource": { "Ref" : "LambdaENISNSTopic" }
+          } ]
+        },
+        "Roles": [ { "Ref": "ASGNotifierRole" } ]
+      },
+      "DependsOn": [ "ASGNotifierRole", "LambdaENISNSTopic" ]
+    },
+    "TransitAssumeRole":{
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {"Fn::Join": ["-", [ "TransitAssumeRole", { "Ref": "AWS::StackName" }]]},
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": { "Fn::Join": [":", ["arn:aws:iam:", {"Ref": "AWS::AccountId"}, "root"]]}
+            },
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path": "/",
+        "Policies": [ {
+          "PolicyName": {"Fn::Join": ["-", ["TransitAssumeRolePolicy", { "Ref": "AWS::StackName" }]]},
+          "PolicyDocument": {
+            "Version" : "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "S3Actions",
+                "Effect": "Allow",
+                "Action": ["s3:GetBucketAcl","s3:GetBucketLocation","s3:GetObject","s3:GetObjectAcl","s3:ListBucket","s3:PutObject","s3:PutObjectAcl","s3:PutObjectTagging" ],
+                "Resource": ["*"]
+              },
+              {
+                "Sid": "SQSActions",
+                "Effect": "Allow",
+                "Action": ["sqs:SendMessage"],
+                "Resource": ["*"]
+              },
+              {
+                "Effect": "Allow",
+                "Action": ["ec2:AcceptVpcPeeringConnection"],
+                "Resource": ["*"]
+              }
+            ]
+          }
+        }]
+      }
+    },
+    "InitLambda" : {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+            "Handler": "init.lambda_handler",
+            "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+            "Code": {
+                "S3Bucket": { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ "panw-aws-autoscale-v21", { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] },
+                "S3Key": { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] }
+            },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      },
+      "DependsOn": [ "LambdaExecutionRole"]
+      },
+    "LambdaCustomResource": {
+        "Type": "AWS::CloudFormation::CustomResource",
+        "Version" : "1.0",
+        "DependsOn": [ "FwInit", "InitLambda", "TrustSecurityGroup",  "UntrustSecurityGroup", "MgmtSecurityGroup", "VPCSecurityGroup", "TransitAssumeRole" ],
+         "Properties" : {
+            "SubscriberAccounts": {"Ref": "SubscriberAWSAccountNumber"},
+            "TransitAssumeRoleName": {"Ref":"TransitAssumeRole"},
+            "TransitAssumeRoleArn": {"Fn::GetAtt": ["TransitAssumeRole","Arn"]},
+            "ServiceToken": { "Fn::GetAtt" : ["InitLambda", "Arn"] },
+            "StackName": {"Ref": "AWS::StackName"},
+            "Region": {"Ref": "AWS::Region"},
+            "VpcId": {"Ref": "VPCID"},
+            "SubnetIDMgmt": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "MGMTSubnetAz1" }, { "Ref" : "MGMTSubnetAz2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "MGMTSubnetAz1" }, { "Ref" : "MGMTSubnetAz2" }, { "Ref" : "MGMTSubnetAz3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "MGMTSubnetAz1" }, { "Ref" : "MGMTSubnetAz2" }, { "Ref" : "MGMTSubnetAz3" }, { "Ref" : "MGMTSubnetAz4" } ] ] } ] } ] },
+            "SubnetIDUntrust": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" }, { "Ref" : "UNTRUSTSubnet3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "UNTRUSTSubnet1" }, { "Ref" : "UNTRUSTSubnet2" }, { "Ref" : "UNTRUSTSubnet3" }, { "Ref" : "UNTRUSTSubnet4" } ] ] } ] } ] },
+            "SubnetIDTrust": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "TRUSTSubnet1" }, { "Ref" : "TRUSTSubnet2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "TRUSTSubnet1" }, { "Ref" : "TRUSTSubnet2" }, { "Ref" : "TRUSTSubnet3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "TRUSTSubnet1" }, { "Ref" : "TRUSTSubnet2" }, { "Ref" : "TRUSTSubnet3" }, { "Ref" : "TRUSTSubnet4" } ] ] } ] } ] },
+            "RouteTableIDTrust": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "TrustRouteTableAz1" }, { "Ref" : "TrustRouteTableAz2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "TrustRouteTableAz1" }, { "Ref" : "TrustRouteTableAz2" }, { "Ref" : "TrustRouteTableAz3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "TrustRouteTableAz1" }, { "Ref" : "TrustRouteTableAz2" }, { "Ref" : "TrustRouteTableAz3" }, { "Ref" : "TrustRouteTableAz4" } ] ] } ] } ] },                  
+            "MgmtSecurityGroup": {"Ref": "MgmtSecurityGroup"},
+            "UntrustSecurityGroup": {"Ref": "UntrustSecurityGroup"},
+            "TrustSecurityGroup": {"Ref": "TrustSecurityGroup"},
+            "VPCSecurityGroup": {"Ref": "VPCSecurityGroup"},
+	          "KeyName" : {"Ref": "KeyName"},
+	          "ELBName" : {"Ref": "ELBName"},
+	          "ELBTargetGroupName"  : {"Fn::Select": [1, { "Fn::If" : [ "CreateELBTypeApp",{"Fn::Split": ["/", { "Fn::GetAtt": [ "PublicLoadBalancerTargetGroup",  "TargetGroupFullName" ] } ] },{"Fn::Split": ["/", { "Fn::GetAtt": [ "NetworkLoadBalancerTargetGroup",  "TargetGroupFullName" ] } ] } ] } ] },
+	          "FWInstanceType" : { "Fn::FindInMap" : [ "FWInstanceTypeMap", "TypeM4", "M4xlarge" ] },
+	          "SSHLocation" : {"Ref": "SSHLocation"},
+            "MinInstancesASG": { "Fn::FindInMap" : [ "ASGScaleMap", "MinInstances", "ASG" ] },	          
+	          "MaximumInstancesASG" : { "Fn::FindInMap" : [ "ASGScaleMap", "MaxInstances", "ASG" ] },
+	          "ScaleUpThreshold" : { "Fn::FindInMap" : [ "ASGScaleMap", "ScaleUpThreshold", "ASG" ] },
+	          "ScaleDownThreshold" : { "Fn::FindInMap" : [ "ASGScaleMap", "ScaleDownThreshold", "ASG" ] },
+	          "ScalingParameter" : { "Fn::FindInMap" : [ "ASGScaleMap", "ScalingParam", "CPU" ] },
+	          "ScalingPeriod" : { "Fn::FindInMap" : [ "ASGScaleMap", "ScalingPeriod", "ASG" ] },
+	          "ImageID" : { "Ref": "PanFwAmiId" },
+            "LambdaENISNSTopic": {"Ref": "LambdaENISNSTopic"},
+            "FirewallBootstrapRole": {"Ref": "FirewallBootstrapInstanceProfile"},
+            "LambdaExecutionRole": {"Ref": "LambdaExecutionRole"},
+            "ASGNotifierRole": { "Fn::GetAtt": [ "ASGNotifierRole", "Arn" ] },
+            "ASGNotifierRolePolicy": {"Ref": "ASGNotifierRolePolicy"},
+                  "BootstrapS3Bucket" : { "Ref" : "BootstrapS3Bucket" },
+	          "LambdaS3Bucket" : { "Ref" : "LambdaS3Bucket" },
+	          "PanS3KeyTpl" : { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] },
+	          "KeyPANWFirewall" : { "Ref" : "KeyPANWFirewall" },
+	          "KeyPANWPanorama" : { "Ref" : "KeyPANWPanorama" },
+	          "PanoramaAdminUser" : { "Ref" : "PanoramaAdminUser" },
+            "SubnetIDNATGW": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "NATGWSubnetAz1" }, { "Ref" : "NATGWSubnetAz2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "NATGWSubnetAz1" }, { "Ref" : "NATGWSubnetAz2" }, { "Ref" : "NATGWSubnetAz3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "NATGWSubnetAz1" }, { "Ref" : "NATGWSubnetAz2" }, { "Ref" : "NATGWSubnetAz3" }, { "Ref" : "NATGWSubnetAz4" } ] ] } ] } ] },
+            "SubnetIDLambda": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" } ] ] }, 
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" }, { "Ref" : "LambdaSubnetAz3" } ] ] }, 
+                  { "Fn::Join": [ ",", [ { "Ref" : "LambdaSubnetAz1" }, { "Ref" : "LambdaSubnetAz2" }, { "Ref" : "LambdaSubnetAz3" }, { "Ref" : "LambdaSubnetAz4" } ] ] } ] } ] },
+            "FwInit": {"Ref": "FwInit"},
+            "InitLambda": {"Ref": "InitLambda"},
+            "LambdaENIQueue" : { "Ref": "LambdaENIQueue" },
+            "Debug": {"Ref": "Debug" },
+            "FWLaunchTemplate": {"Ref": "FWLaunchTemplate"},
+            "NetworkLoadBalancerQueue" : { "Ref": "NetworkLoadBalancerQueue" }
+         }
+    },
+    "FWLaunchTemplate": {
+      "Type": "AWS::EC2::LaunchTemplate",
+        "Properties": {
+           "LaunchTemplateName": { "Fn::Join": [ "-", [ {"Fn::Select": [1, { "Fn::If" : [ "CreateELBTypeApp",{"Fn::Split": ["/", { "Fn::GetAtt": [ "PublicLoadBalancerTargetGroup",  "TargetGroupFullName" ] } ] },{"Fn::Split": ["/", { "Fn::GetAtt": [ "NetworkLoadBalancerTargetGroup",  "TargetGroupFullName" ] } ] } ] } ] },  "PANW-Firewall-LaunchTemplate" ] ] },
+          "LaunchTemplateData": {
+            "ImageId": { "Ref": "PanFwAmiId" },
+            "InstanceType": { "Fn::FindInMap" : [ "FWInstanceTypeMap", "TypeM4", "M4xlarge" ] },
+            "KeyName": { "Ref": "KeyName"},
+            "SecurityGroupIds": [{ "Fn::GetAtt" : ["UntrustSecurityGroup", "GroupId"] }],
+            "IamInstanceProfile": {
+              "Arn": {"Fn::GetAtt" : ["FirewallBootstrapInstanceProfile", "Arn"] }
+            },
+            "EbsOptimized": "true",
+            "BlockDeviceMappings" :
+            [
+                {
+                  "DeviceName" : "/dev/xvda",
+                  "Ebs" :
+                  {
+                    "VolumeType" : "gp2",
+                    "DeleteOnTermination" : "true"
+                  }
+                }
+            ],
+            "UserData":  { "Fn::Base64" : { "Fn::Join" : ["", [
+              "vmseries-bootstrap-aws-s3bucket=",  { "Ref" : "BootstrapS3Bucket" }
+            ]]}}
+          }
+        }
+    }
+  },
+  "Outputs" : {
+    "ScalingParameter": {
+      "Value": { "Fn::FindInMap" : [ "ASGScaleMap", "ScalingParam", "CPU" ] },
+      "Description": "Scaling Parameter you have selected"
+    },
+    "TrustSubnets": {
+      "Value": { "Fn::If" : [ "CreateSubnet2", { "Fn::Join": [ ",", [ { "Fn::Select" : [ "0", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "1", {"Ref" : "TrustSubnetIpBlocks"} ] } ] ] },
+          {"Fn::If" : ["CreateSubnet3", { "Fn::Join": [ ",", [ { "Fn::Select" : [ "0", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "1", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "2", {"Ref" : "TrustSubnetIpBlocks"} ] } ] ] },
+                  { "Fn::Join": [ ",", [ { "Fn::Select" : [ "0", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "1", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "2", {"Ref" : "TrustSubnetIpBlocks"} ] }, { "Fn::Select" : [ "3", {"Ref" : "TrustSubnetIpBlocks"} ] } ] ] } ] } ] },
+      "Description": "Trust subnets in the VPC"
+    },
+    "ELBName": {
+      "Value": { "Ref": "ELBName" },
+      "Description": "Elastic Application Load Balancer (Public) name"
+    },    
+    "ELBDNSName": {
+      "Value": { "Fn::GetAtt" : ["PublicLoadBalancer", "DNSName"] },
+      "Description": "Elastic Application Load Balancer (Public) DNS name"
+    },        
+    "KeyName": {
+      "Value": { "Ref": "KeyName" },
+      "Description": "Key Pair you have selected for SSH"
+    },
+    "SSHLocation": {
+      "Value": { "Ref": "SSHLocation" },
+      "Description": "Make sure you SSH from this IP address"
+    },
+    "BootstrapS3Bucket": {
+      "Value": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref" : "BootstrapS3Bucket" } ] ] },
+      "Description": "Your Bootstrap bucket being used for this deployment"
+    },
+    "LambdaS3Bucket": {
+      "Value": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Fn::If" : [ "PANWScript", { "Fn::Join": [ "-", [ { "Fn::FindInMap" : [ "BucketRegionMap", "LambdaRegion", "DefaultRegion" ]}, { "Ref": "AWS::Region" }]]}, { "Ref" : "LambdaS3Bucket" }] }] ] },
+      "Description": "Your Template/Lambda Code bucket being used for this deployment"
+    },
+    "LambdaCodeFile": {
+      "Value": { "Fn::FindInMap" : [ "KeyMap", "Key", "Key" ] },
+      "Description": "File name of the Lambda Code being run"
+    },
+    "TransitAssumeRoleArn" : {
+      "Description" : "Transit Assume Role Arn, This will be given as a Parameter while launching application CFT",
+      "Value" : {"Fn::GetAtt": ["TransitAssumeRole","Arn"]}
+    },
+    "NetworkLoadBalancerQueue": {
+      "Value": { "Ref": "NetworkLoadBalancerQueue" },
+      "Description": "Network Load Balancer queue"
+    }
+  }
+}
