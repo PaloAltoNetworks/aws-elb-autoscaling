@@ -13,4 +13,5 @@ To protect outbound traffic flows, hybrid architectures that connect AWS to on-p
 * Support for separating the frontend firewall VPC from the backend application VPC using AWS PrivateLink or VPC peering
 * Support for specific combinations of external and internal load balancing
 
-# Caution: These repositories contain default password information and should be used for Proof of Concept purposes only. If you wish to use this template in a production environment it is your responsibility to change the default passwords. 
+# Proceed with Caution: 
+These repositories contain default password information and should be used for Proof of Concept purposes only. If you wish to use this template in a production environment it is your responsibility to change the default passwords. 
