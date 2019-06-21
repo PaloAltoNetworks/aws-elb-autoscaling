@@ -6,7 +6,7 @@ To protect outbound traffic flows, hybrid architectures that connect AWS to on-p
 
 ## History
 ### Version 1.0 - Mar 2017 Deprecated
-### Version 2.0 - Jan 2018 Deprecated
+### Version 2.0 - Jan 2018 
 ### Version 2.0.1 - Nov 2018, bug fixes
 ### Version 2.1-CS - Jan 2019, Deprecated and removed
 ### Version 2.1 - May 2019 Fully GA
