@@ -5,8 +5,8 @@ This repository provides AWS CloudFormation Templates (CFT) and related Lambda f
 To protect outbound traffic flows, hybrid architectures that connect AWS to on-premises, and east-west flows between VPCs, refer to the Transit VPC options listed http://live.paloaltonetworks.com/cloudtemplate
 
 ## History
-### Version 1.0 - Mar 2017
-### Version 2.0 - Jan 2018
+### Version 1.0 - Mar 2017 Deprecated
+### Version 2.0 - Jan 2018 Deprecated
 ### Version 2.0.1 - Nov 2018, bug fixes
 ### Version 2.1-CS - Jan 2019, Deprecated and removed
 ### Version 2.1 - May 2019 Fully GA
