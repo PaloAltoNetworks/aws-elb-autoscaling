@@ -1,6 +1,4 @@
-![alt_text](/Version-2.1/pan-logo-badge-green-dark-kick-up.png "logo")
-
-# Auto Scaling VM-Series firewalls on AWS Version 2.1
+# Auto Scaling VM-Series firewalls on AWS
 
 Version 2.1 Firewall Template GA release
 
@@ -23,14 +21,16 @@ This architecture uses a load balancer sandwich for protecting Internet facing a
 * The firewall VPC's and application VPC's can be part of same AWS account or different accounts, i.e. cross-account.
 
 # Documentation
-Use of version 2.1 is recommended only for those users already familar with the existing auto scaling solution (version 2.1). T
+* Refer to the [deployment guide]
+(https://docs.paloaltonetworks.com/vm-series/9-0/vm-series-deployment/set-up-the-vm-series-firewall-on-aws/auto-scale-vm-series-firewalls-with-the-amazon-elb/vm-series-auto-scale-template-for-aws-version-v21.html) before starting.
+* [Reference architectures](https://www.paloaltonetworks.com/resources/reference-architectures) for protecting outbound and east-west flows are also available.
+* How-to videos, datasheet and templates can be found at [live.paloaltonetworks.com/aws](http://live.paloaltonetworks.com/aws).
 
-The deployment guide can be found [here](
-https://docs.paloaltonetworks.com/vm-series/9-0/vm-series-deployment/set-up-the-vm-series-firewall-on-aws/auto-scale-vm-series-firewalls-with-the-amazon-elb/vm-series-auto-scale-template-for-aws-version-v21.html)
-
-# Support Policy: 
+# Support Policy
 **The Firewall Template is a GA Release & Officially Supported** 
 The autoscaling firewall template is released under the official support policy of Palo Alto Networks through the support options that you've purchased, for example Premium Support, support teams, or ASC (Authorized Support Centers) partners and Premium Partner Support options. The support scope is restricted to troubleshooting for the stated/intended use cases and product versions specified in the project documentation and does not cover customization of the scripts or templates. 
 
-**The Application Template is Community-Supported aka NOT TAC SUPPORTED**
+**The Application Template is a sample and Community-Supported aka NOT TAC SUPPORTED**
 This CFT is released under an as-is, best effort, support policy. These scripts should be seen as community supported and Palo Alto Networks will contribute our expertise as and when possible. We do not provide technical support or help in using or troubleshooting the components of the project through our normal support options such as Palo Alto Networks support teams, or ASC (Authorized Support Centers) partners and backline support options. The underlying product used (the VM-Series firewall) by the scripts or templates are still supported, but the support is only for the product functionality and not for help in deploying or using the template or script itself. Unless explicitly tagged, all projects or work posted in our GitHub repository (at https://github.com/PaloAltoNetworks) or sites other than our official Downloads page on https://support.paloaltonetworks.com are provided under the best effort policy.
+
+NOTE: Python Software Foundation (PSF) has announced that Python 2.7 which is used in the AWS Lambda functions used in this auto scaling solution will reach [end of life](https://www.python.org/dev/peps/pep-0373/) in January 2020. This change does not impact the auto scaling solution since AWS has announced [continued support](https://aws.amazon.com/blogs/compute/continued-support-for-python-2-7-on-aws-lambda/) for Python 2.7 on AWS Lambda till December 2020. Palo Alto Networks will evaluate how to continue supporting auto scaling on AWS beyond December 2020 and provide an update on our plans at a future date.
